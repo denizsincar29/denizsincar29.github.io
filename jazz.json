@@ -1,0 +1,25 @@
+{
+"title":"a denizian blues",
+"composer":["Deniz","Sincar"],
+"style":"Medium Up Swing 2",
+"key":"F",
+"time_signature":[4,4],
+"chords": [
+	"/m [ *A",
+	"F7",
+	"/text hello ireal",
+	"Bb7/E",
+	"F7",
+	"F7#11",
+	"/m *B",
+	"Bb7",
+	"Bo",
+	"I-7",
+	"D7/Ab",
+	"/m *C",
+	"G-7",
+	"C7^13",
+	["F7","D7/Ab"],
+	["G7/Eb","C7/Gb"],
+	"/m z"
+]}
