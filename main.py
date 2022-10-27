@@ -16,7 +16,7 @@ class Wnd(wx.Frame):
 		panel.SetSizer(sizer)
 
 		filemenu=wx.Menu()
-		filemenu.Append(wx.ID_ABOUT, "&About"," Information about this program")
+
 		filemenu.AppendSeparator()
 		filemenu.Append(wx.ID_EXIT,"E&xit"," Terminate the program")
 		self.Bind(wx.EVT_MENU, exit, id=wx.ID_EXIT)
@@ -25,18 +25,10 @@ class Wnd(wx.Frame):
 		self.SetMenuBar(menuBar)
 		self.Show()
 
-	def enter(self,event):
-		ms= str(self.title.GetValue())
-		receiver.speak(str(receiver.command(ms)))
-		self.title.SetValue("")
-		self.text.write("me: "+ms+"\n")
 
 	def loop(self):
 		while True:
-			if not receiver.g.q.empty():
-				r=receiver.g.q.get()
-				self.text.write("received: "+r+"\n")
-				receiver.speak(r)
+
 
 
 
