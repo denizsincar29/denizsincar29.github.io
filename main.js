@@ -1,4 +1,4 @@
-let chordlist=[[]];
+let chordlist=[];
 
 function main(){
 	initctrls()
@@ -44,20 +44,29 @@ function main(){
 	}
 }
 function enterchord(){
+	let selects=[document.getElementById("selectkey"), document.getElementById("selectfn")];
+	let indices=[selects[0].selectedIndex,selects[1].selectedIndex];
+	let el=chordkeys[indices[0]]+" "+fntlist[indices[1]];
 	select = document.getElementById('thelist');
-	index=select.selectedIndex
+	index=select.selectedIndex;
 	chordlist.splice(index,0,[el]);
 	select.innerHTML="";
 	for (let i = 0; i<chordlist.length; i++){
 		let opt = document.createElement('option');
-		opt.value = i+1;
+		opt.value = i;
 		opt.innerHTML = chordlist[i];
 		select.appendChild(opt);
 	}
+	let opt = document.createElement('option');
+	opt.value = "end";
+	opt.innerHTML = metadata["end"];
+	select.appendChild(opt);
+
 }
 function initctrls(){
 	labels=document.getElementsByTagName("label");
 	btns=document.getElementsByTagName("button");
+	document.getElementById("ending").innerHTML=metadata["end"];
 	for(element of labels){element.innerHTML=metadata[element.id];}
 	for(element of btns){element.innerHTML=metadata[element.id];}
 
