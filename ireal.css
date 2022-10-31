@@ -1,17 +1,24 @@
-div {
+body {
     background-color: #fff0f0;
-    height: 20em;
-    padding: 1.5em 1.5em 0 1.5em;
+    padding: 1em;
 }
-form {
-    background-color: #f0f0f0;
-    height: 40%;
+.top-block {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 }
-#thelist {
-    height: 100%;
+.form-group {
+    margin: 0.5em;
 }
-#selectkey {
-    height: 50%;
-}#thelist {
-    height: 50%;
+.form-group label {
+    display: block;
+    margin-bottom: 0.25em;
+}
+.form-group input,
+.form-group select {
+    width: 100%;
+}
+.button {
+    display: block;
+    margin: 0 auto;
 }

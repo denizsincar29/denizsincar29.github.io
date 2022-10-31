@@ -42,6 +42,8 @@ let key_signatures={
 "G-":"соль минор",
 "G#-":"соль диез минор"
 }
+let key_signatures_list=Object.keys(key_signatures);
+
 let barlines={
 "|":"тактовая черта",
 "[":"открывающая тактовая черта",
@@ -50,6 +52,8 @@ let barlines={
 "}":"конец репризы",
 "Z":"конец произведения"
 }
+let barlines_list=Object.keys(barlines);
+
 let time_signatures ={
 "T44":"4/4",
 "T34":"3/4",
@@ -65,6 +69,8 @@ let time_signatures ={
 "T98":"9/8",
 "T12":"12/8"
 }
+let time_signatures_list=Object.keys(time_signatures);
+
 let rehearsal={
 "*A":"часть А",
 "*B":"часть Б",
@@ -75,15 +81,22 @@ let rehearsal={
 "Q":"кода",
 "f":"фермата"
 }
+let rehearsal_list=Object.keys(rehearsal);
+
 let endings={
 "N1":"первая вольта",
 "N2":"Вторая вольта",
 "N3":"Третья вольта",
 "N0":"вольта"
 }
+let endings_list=Object.keys(endings);
+
 let vertical_spaces={
 "y":"1 отступ вниз",
 "yy":"2 отступа вниз",
 "yyy":"3 отступа вниз"
 }
+let vertical_spaces_list=Object.keys(vertical_spaces);
+
+
 let styles=["Afro 12/8", "Ballad Double Time Feel", "Ballad Even", "Ballad Melodic", "Ballad Swing", "Blue Note", "Bossa Nova", "Doo Doo Cats", "Double Time Swing", "Even 8ths", "Even 8ths Open", "Even 16ths", "Guitar Trio", "Gypsy Jazz", "Latin", "Latin/Swing", "Long Notes", "Medium Swing", "Medium Up Swing", "Medium Up Swing 2", "New Orleans Swing", "Second Line", "Slow Swing", "Swing Two/Four", "Trad Jazz", "Up Tempo Swing", "Up Tempo Swing 2", "Argentina: Tango", "Brazil: Bossa Acoustic", "Brazil: Bossa Electric", "Brazil: Samba", "Cuba: Bolero", "Cuba: Cha Cha Cha", "Cuba: Son Montuno 2-3", "Cuba: Son Montuno 3-2", "Bluegrass", "Country", "Disco", "Funk", "Glam Funk", "House", "Reggae", "Rock", "Rock 12/8", "RnB", "Shuffle", "Slow Rock", "Smooth", "Soul", "Virtual Funk"];

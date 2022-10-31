@@ -2,6 +2,31 @@ let chordlist=[[]];
 
 function main(){
 	initctrls()
+	let select=document.getElementById('select_style');
+	for (let i = 0; i<styles.length; i++){
+		let opt = document.createElement('option');
+		opt.value = i;
+		opt.innerHTML = styles[i];
+		select.appendChild(opt);
+	}
+
+	select = document.getElementById('key_select');
+	for (let i = 0; i<key_signatures_list.length; i++){
+		let opt = document.createElement('option');
+		opt.value = i;
+		opt.innerHTML = key_signatures[key_signatures_list[i]];
+		select.appendChild(opt);
+	}
+
+	select = document.getElementById('select_ts');
+	for (let i = 0; i<time_signatures_list.length; i++){
+		let opt = document.createElement('option');
+		opt.value = i;
+		opt.innerHTML = time_signatures[time_signatures_list[i]];
+		select.appendChild(opt);
+	}
+
+
 	select = document.getElementById('selectkey');
 	for (let i = 0; i<chordkeys.length; i++){
 		let opt = document.createElement('option');
@@ -10,7 +35,7 @@ function main(){
 		select.appendChild(opt);
 	}
 	select = document.getElementById('selectfn');
-	fnlist=Object.keys(fndict)
+	// fnlist=Object.keys(fndict)
 	for (let i = 0; i<fnlist.length; i++){
 		let opt = document.createElement('option');
 		opt.value = i;
