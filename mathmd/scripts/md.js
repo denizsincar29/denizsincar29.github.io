@@ -40,7 +40,7 @@ function fetchmd(){
 	let url=decodeURI(location.search.slice(1));
 	// we got the parameters from the request. now lets fetch the url
 	fetch("./md/"+url+".md")
-		.then(response => response.json())
+		.then(response => response.text())
 		.then(result => mathmd(result));
 }
 
