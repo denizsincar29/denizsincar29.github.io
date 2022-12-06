@@ -1,0 +1,22 @@
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>md</title>
+
+<script>
+// let\s configure mathjax and define that we want to use ascii math, because it is set to latex by default
+MathJax = {
+  loader: {load: ['input/asciimath', 'output/chtml', 'ui/menu']},
+};
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://www.desmos.com/api/v1.7/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+</head>
+<body>
+<div id="mathmd"></div>
+<script src="scripts/graph.js"></script>
+<script src="scripts/md.js"></script>
+</body>
+</html>
