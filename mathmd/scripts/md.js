@@ -52,5 +52,4 @@ document.getElementById("mathmd").innerHTML=converter.makeHtml(md.replace("`","\
 // convert a ready markdown string to html, without fetching. however fetch functionality is present.
 // convert a markdown string to html
 
-let mathmds="# hello\n`x^2+y^2=9`\n##hello2\n{graph:x^2+y^2=9}";
-mathmd(mathmds);
+fetchmd();

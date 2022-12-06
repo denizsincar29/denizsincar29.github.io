@@ -1,0 +1,24 @@
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>math</title>
+
+<script>
+function loadlist(arr){
+	list=document.getElementsById("mathlist");
+	for (item of arr){
+		var li=document.createElement("li");
+		li.innerHTML=item;
+		list.appendChild(li);
+	}
+}
+
+fetch("./files.json")
+		.then(response => response.json())
+		.then(result => loadlist(result));
+</script>
+</head>
+<body>
+<ul id="mathlist">></ul>
+</body>
+</html>
