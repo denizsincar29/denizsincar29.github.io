@@ -14,11 +14,11 @@ function mathext(){
 		type: "output",
 		filter: function(text, converter, options) {
 			return text
-				.replace("<p><code>","`").replace("</p></code>","`")
-				.replace("<code>","`").replace("</code>","`") // replaced back to backtick
-				.replace("¨D","$") // replaced the dollar string to dollar, because markdown replaces dollar to trema+D
+				.replaceAll("<p><code>","`").replaceAll("</p></code>","`")
+				.replaceAll("<code>","`").replaceAll("</code>","`") // replaceAlld back to backtick
+				.replaceAll("¨D","$") // replaceAlld the dollar string to dollar, because markdown replaceAlls dollar to trema+D
 				;
-				// add more replacements here, for more compatibilities with mathjax
+				// add more replaceAllments here, for more compatibilities with mathjax
 		}
 	}
 ];}

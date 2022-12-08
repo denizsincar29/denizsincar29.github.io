@@ -8,9 +8,9 @@ function graphext(){
 		type: "output",
 		filter: function(text, converter, options) {
 			return text
-				.replace(/{graph:(.*)}/gi,"<div class='graph'>$1</div>")
+				.replaceAll(/{graph:(.*)}/gi,"<div class='graph'>$1</div>")
 				;
-				// add more replacements here, for more compatibilities with mathjax
+				// add more replaceAllments here, for more compatibilities with mathjax
 		}
 	}
 ];}

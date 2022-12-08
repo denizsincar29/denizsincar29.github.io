@@ -6,7 +6,7 @@ function graphext(){
 		type: "output",
 		filter: function(text, converter, options) {
 			return text
-				.replace(/{graph:(.*)}/gi,"<div class='graph'><strong>---------------<br>this is a graph of a function: `$1`</b></div>");
+				.replaceAll(/{graph:(.*)}/gi,"<div class='graph'><strong>---------------<br>this is a graph of a function: `$1`</b></div>");
 		}
 	}
 ];}
