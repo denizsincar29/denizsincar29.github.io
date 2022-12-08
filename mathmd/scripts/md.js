@@ -41,7 +41,8 @@ function fetchmd(){
 	// we got the parameters from the request. now lets fetch the url
 	fetch("./md/"+url+".md")
 		.then(response => response.text())
-		.then(result => mathmd(result));
+		.then(result => mathmd(result))
+.then(MathJax.typesetPromise);
 }
 
 // make a function to convert markdown to html with pre-configured extension
