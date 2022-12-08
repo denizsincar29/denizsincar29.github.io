@@ -47,7 +47,7 @@ function fetchmd(){
 
 // make a function to convert markdown to html with pre-configured extension
 function mathmd(md){
-document.getElementById("mathmd").innerHTML=converter.makeHtml(md.replace("`","\\`"));
+document.getElementById("mathmd").innerHTML=converter.makeHtml(md); // make md
 }
 
 // convert a ready markdown string to html, without fetching. however fetch functionality is present.
