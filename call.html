@@ -1,0 +1,78 @@
+<html>
+<head>
+	<title>wow</title>
+	<script src="https://unpkg.com/@daily-co/daily-js"></script>
+</head>
+<body onload="main()">
+<h1>простая htmlка со звонилкой!</h1>
+
+
+
+	<script>
+// joinRoom, leaveRoom, to toggle call.setLocalAudio(!call.localAudio())
+
+async function main() {
+	// CHANGE THIS TO A ROOM WITHIN YOUR DAILY ACCOUNT
+	const ROOM_URL = "https://denizsincar29.daily.co/deniz";
+
+	window.call = DailyIframe.createCallObject({
+		url: ROOM_URL,
+		audioSource: true,
+		videoSource: false,
+		dailyConfig: {
+			experimentalChromeVideoMuteLightOff: true
+		}
+	});
+
+	call.on("joined-meeting", () => console.log("[JOINED MEETING]"));
+	call.on("error", e => console.error(e));
+
+	call.on("track-started", playTrack);
+	// call.on("track-stopped", destroyTrack);
+	call.on("participant-joined", updateParticipants);
+	call.on("participant-left", updateParticipants);
+}
+
+async function joinRoom() {
+	await call.join();
+}
+
+async function leaveRoom() {
+	await call.leave();
+}
+function playTrack(evt) {
+	console.log("[TRACK STARTED]", evt.participant && evt.participant.session_id);
+
+	// sanity check to make sure this is an audio track
+	if (!(evt.track && evt.track.kind === "audio")) {
+		console.error("!!! playTrack called without an audio track !!!", evt);
+		return;
+	}
+
+	// don't play the local audio track (echo!)
+	if (evt.participant.local) {return;}
+
+	let audioEl = document.createElement("audio");
+	document.body.appendChild(audioEl);
+	audioEl.srcObject = new MediaStream([evt.track]);
+	audioEl.play();
+}
+
+function destroyTrack(evt) {
+	console.log("[TRACK STOPPED]", (evt.participant && evt.participant.session_id) || "[left meeting]");
+
+	let els = Array.from(document.getElementsByTagName("video")).concat(Array.from(document.getElementsByTagName("audio")));
+	for (let el of els) {
+		if (el.srcObject && el.srcObject.getTracks()[0] === evt.track) {
+			el.remove();
+		}
+	}
+}
+
+
+joinRoom();
+
+</script>
+
+	</body>
+</html>
