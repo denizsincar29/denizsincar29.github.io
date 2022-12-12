@@ -1,11 +1,19 @@
 <html>
 <head>
+	<meta charset="utf-8">
 	<title>wow</title>
+	<link rel="stylesheet" href="hide.css">
+	<script src="sr.js"></script>
 	<script src="https://unpkg.com/@daily-co/daily-js"></script>
 </head>
 <body onload="main()">
 <h1>простая htmlка со звонилкой!</h1>
-
+<input type="text" id="name-change" placeholder="Enter your new name"></input>
+<br>
+<input type="checkbox" id="chbox" onchange="toggle_joining(this.checked)">подключиться</input>
+<br>
+<ol id="participants"></ol>
+<div id="statusbar" class="visually-hidden" aria-live="polite"></div>
 
 
 	<script>
@@ -24,17 +32,22 @@ async function main() {
 		}
 	});
 
-	call.on("joined-meeting", () => console.log("[JOINED MEETING]"));
+	call.on("joined-meeting", () => speak("JOINED MEETING"));
 	call.on("error", e => console.error(e));
 
 	call.on("track-started", playTrack);
-	// call.on("track-stopped", destroyTrack);
-	call.on("participant-joined", updateParticipants);
-	call.on("participant-left", updateParticipants);
+	call.on("track-stopped", destroyTrack);
+	call.on("participant-joined", part_joined);
+	call.on("participant-left", part_left);
 }
 
-async function joinRoom() {
-	await call.join();
+async function toggle_joining(jd){
+	if(!jd){await leaveRoom();}
+	else{await joinRoom(document.getElementById('name-change').value);}
+}
+async function joinRoom(uname) {
+	await call.join({userName:uname});
+	updateParticipants();
 }
 
 async function leaveRoom() {
@@ -69,9 +82,33 @@ function destroyTrack(evt) {
 	}
 }
 
+function part_joined(evt){
+	speak(evt["participant"]["user_name"]+" joined!");
+	updateParticipants(evt);
+}
 
-joinRoom();
+function part_left(evt){
+	speak(evt["participant"]["user_name"]+" left!");
+	updateParticipants(evt);
+}
 
+function updateParticipants(evt="nd") {
+	let el = document.getElementById("participants");
+	el.innerHTML="";
+	let count = Object.entries(call.participants()).length;
+	let part=Object.values(call.participants());
+	for(item of part){
+		var li=document.createElement("li");
+		li.innerText=item["user_name"];
+		el.appendChild(li);
+}
+
+}
+
+
+
+
+document.addEventListener("DOMContentLoaded",function(){speak("hello world");});
 </script>
 
 	</body>
