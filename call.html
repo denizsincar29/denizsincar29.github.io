@@ -7,10 +7,7 @@
 	<script src="https://unpkg.com/@daily-co/daily-js"></script>
 </head>
 <body onload="main()">
-<h1>Это мой вебсайт. Введи своё имя и отметь флажок подключиться</h1>
-<input type="text" id="name-change" placeholder="Введите ваше имя"></input>
-<br>
-<input type="checkbox" id="chbox" onchange="toggle_joining(this.checked)">подключиться</input>
+<h1>Добро пожаловать! скоро Дениз Синджар с вами свяжется.</h1>
 <br>
 <ol id="participants"></ol>
 <div id="statusbar" class="visually-hidden" aria-live="polite"></div>
@@ -39,12 +36,10 @@ async function main() {
 	call.on("track-stopped", destroyTrack);
 	call.on("participant-joined", part_joined);
 	call.on("participant-left", part_left);
+	let name=prompt("введите ваше имя","guest");
+	joinRoom(name);
 }
 
-async function toggle_joining(jd){
-	if(!jd){await leaveRoom();}
-	else{await joinRoom(document.getElementById('name-change').value);}
-}
 async function joinRoom(uname) {
 	await call.join({userName:uname});
 	updateParticipants();
@@ -53,6 +48,7 @@ async function joinRoom(uname) {
 async function leaveRoom() {
 	await call.leave();
 }
+
 function playTrack(evt) {
 	console.log("[TRACK STARTED]", evt.participant && evt.participant.session_id);
 
@@ -105,10 +101,6 @@ function updateParticipants(evt="nd") {
 
 }
 
-
-
-
-document.addEventListener("DOMContentLoaded",function(){speak("hello world");});
 </script>
 
 	</body>
