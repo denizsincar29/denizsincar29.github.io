@@ -6,8 +6,8 @@
 	<script src="sr.js"></script>
 	<script src="https://unpkg.com/@daily-co/daily-js"></script>
 </head>
-<body onload="main()">
-<h1>Добро пожаловать! это мой экспериментальный голосовой чат, написанный на javascript.</h1>
+<body onload="main()" onbeforeunload="leaveRoom()">
+<h1>welcome!</h1><br>
 <br>
 <ol id="participants"></ol>
 <div id="statusbar" class="visually-hidden" aria-live="polite"></div>
@@ -36,7 +36,7 @@ async function main() {
 	call.on("track-stopped", destroyTrack);
 	call.on("participant-joined", part_joined);
 	call.on("participant-left", part_left);
-	let name=prompt("введите ваше имя","guest");
+	let name=decodeURI(location.search.slice(1));
 	joinRoom(name);
 }
 
