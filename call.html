@@ -37,6 +37,7 @@ async function main() {
 	call.on("participant-joined", part_joined);
 	call.on("participant-left", part_left);
 	let name=decodeURI(location.search.slice(1));
+	if(name==""||name==null||name==undefined){name=prompt("введите ваше имя");}
 	joinRoom(name);
 }
 
