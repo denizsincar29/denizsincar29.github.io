@@ -1,0 +1,21 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>progress</title>
+</head>
+<body>
+<progress id="prog" value="0" max="100">качалка</progress>
+<script>
+let go=1;
+function update(){
+	let pr=document.getElementById("prog");
+	pr.value+=go;
+	if(pr.value==100){go=-1;}
+if(pr.value==0){go=1;}
+}
+
+setInterval(update,10);
+
+</script>
+</body>
+</html>
