@@ -2,6 +2,7 @@
 <head>
 <title>bubble</title>
 <script>
+let gyroscope=null;
 function upbubble(x,y){
 	let s=document.getElementById("svg");
 	let hw=s.getBBox();
@@ -11,6 +12,7 @@ function upbubble(x,y){
 }
 
 function main(){
+	alert("hellaw");
 	let gyroscope = new Gyroscope({frequency: 60});
 	gyroscope.addEventListener('reading', e => {
 		upbubble(gyroscope.x, gyroscope.y);
