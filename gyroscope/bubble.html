@@ -5,9 +5,9 @@
 let gx=0; let gy=0; let gz=0;
 function handleOrientation(event) {
   console.log(event);
-  gx = event.alpha;
-  gy = event.beta;
-  gz = event.gamma;
+  gx = event.rotation.alpha;
+  gy = event.rotation.beta;
+  gz = event.rotation.gamma;
   upbubble(gx,gy,gz);
 
 }
