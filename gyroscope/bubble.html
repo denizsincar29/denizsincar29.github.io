@@ -4,10 +4,12 @@
 <script>
 let gx=0; let gy=0; let gz=0;
 function handleOrientation(event) {
+  console.log(event);
   gx = event.alpha;
   gy = event.beta;
   gz = event.gamma;
   upbubble(gx,gy,gz);
+
 }
 
 function onClick() {
