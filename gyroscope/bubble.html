@@ -12,7 +12,6 @@ function upbubble(x,y){
 }
 
 function main(){
-	alert("hellaw");
 	let gyroscope = new Gyroscope({frequency: 60});
 	gyroscope.addEventListener('reading', e => {
 		upbubble(gyroscope.x, gyroscope.y);
@@ -29,6 +28,7 @@ function main(){
   <circle cx="50" cy="50" r="7" stroke="green" stroke-width="4" fill="yellow" />
 </svg>
 <h1>head</h1>
+<button onclick="alert(gyroscope.x+';'+gyroscope.y)">gyr</button>
 <div id="xy">gyro</div>
 </body>
 </html>
