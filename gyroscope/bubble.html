@@ -2,23 +2,40 @@
 <head>
 <title>bubble</title>
 <script>
-let gyroscope=null;
-function upbubble(x,y){
+function handleOrientation(event) {
+  const alpha = event.alpha;
+  const beta = event.beta;
+  const gamma = event.gamma;
+  upbubble(alpha,beta,gamma);
+}
+
+function onClick() {
+  if (typeof DeviceMotionEvent.requestPermission === 'function') {
+    // Handle iOS 13+ devices.
+    DeviceMotionEvent.requestPermission()
+      .then((state) => {
+        if (state === 'granted') {
+          window.addEventListener('devicemotion', handleOrientation);
+        } else {
+          console.error('Request to access the orientation was rejected');
+        }
+      })
+      .catch(console.error);
+  } else {
+    // Handle regular non iOS 13+ devices.
+    window.addEventListener('devicemotion', handleOrientation);
+  }
+}
+
+function upbubble(x,y,z){
 	let s=document.getElementById("svg");
 	let hw=s.getBBox();
 	// debug
-	document.getElementById("xy").innerText=gyroscope.x +";"+gyroscope.y;
+	document.getElementById("xy").innerText=x +";"+y+";"+z;
 
 }
 
-function main(){
-	let gyroscope = new Gyroscope({frequency: 60});
-	gyroscope.addEventListener('reading', e => {
-		upbubble(gyroscope.x, gyroscope.y);
-	});
 
-	gyroscope.start();
-}
 
 </script>
 
@@ -29,6 +46,7 @@ function main(){
 </svg>
 <h1>head</h1>
 <button onclick="alert(gyroscope.x+';'+gyroscope.y)">gyr</button>
+<button onclick="onClick()">start</button>
 <div id="xy">gyro</div>
 </body>
 </html>
