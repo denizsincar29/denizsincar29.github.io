@@ -2,11 +2,12 @@
 <head>
 <title>bubble</title>
 <script>
+let gx=0; let gy=0; let gz=0;
 function handleOrientation(event) {
-  const alpha = event.alpha;
-  const beta = event.beta;
-  const gamma = event.gamma;
-  upbubble(alpha,beta,gamma);
+  gx = event.alpha;
+  gy = event.beta;
+  gz = event.gamma;
+  upbubble(gx,gy,gz);
 }
 
 function onClick() {
@@ -45,7 +46,7 @@ function upbubble(x,y,z){
   <circle cx="50" cy="50" r="7" stroke="green" stroke-width="4" fill="yellow" />
 </svg>
 <h1>head</h1>
-<button onclick="alert(gyroscope.x+';'+gyroscope.y)">gyr</button>
+<button onclick="alert(gx+';'+gy+';'+gz)">gyr</button>
 <button onclick="onClick()">start</button>
 <div id="xy">gyro</div>
 </body>
