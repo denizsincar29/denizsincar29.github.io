@@ -58,12 +58,13 @@ function morsify(text){
 		if(letter==="1"){vib.push(l*3); flag=false;}
 		else if(letter==="0"){vib.push(l); flag=false;}
 	}
+	console.log(vib);
 	navigator.vibrate(vib);
 }
 
 function morsate(){
-l=document.getElementById("mor").value;
-morsify(l);
+el=document.getElementById("mor").value;
+morsify(el);
 }
 
 </script>
