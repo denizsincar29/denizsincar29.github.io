@@ -1,8 +1,75 @@
 <html>
 <head>
 <title>text</title>
+<script>
+let morse={
+"a":"01",
+"b":"1000",
+"c":"1010",
+"d":"100",
+"e":"0",
+"f":"0010",
+"g":"110",
+"h":"0000",
+"i":"00",
+"j":"0111",
+"k":"101",
+"l":"0100",
+"m":"11",
+"n":"10",
+"o":"111",
+"p":"0110",
+"q":"1101",
+"r":"010",
+"s":"000",
+"t":"1",
+"u":"001",
+"v":"0001",
+"w":"011",
+"x":"1001",
+"y":"1011",
+"z":"1100",
+"1":"01111",
+"2":"00111",
+"3":"00011",
+"4":"00001",
+"5":"11111",
+"6":"10000",
+"7":"11000",
+"8":"11100",
+"9":"10000",
+"0":"00000",
+".":"010101"
+};
+let l=50;
+function morsify(text){
+	let result="";
+	for(char of text.toLowerCase()){
+		if(morse[char]){result+=morse[char]+" ";}
+		if(char===" "){result+="  ";}
+	}
+	let vib=[];
+	let flag=false;
+	for(let letter of result){
+		if(vib.length>0){
+			if(letter===" "){vib.push(l*3); flag=true;}
+			else{if(!flag){vib.push(l); flag=false;}}
+		}
+		if(letter==="1"){vib.push(l*3); flag=false;}
+		else if(letter==="0"){vib.push(l); flag=false;}
+	}
+	navigator.vibrate(vib);
+}
+
+function morsate(){
+l=document.getElementById("mor").value;
+morsify(l);
+}
+
+</script>
 </head>
 <body>
-<button onclick="JavaScript:navigator.vibrate([100,100,300,100,300,100,100,300,100,100,300,100,100,300,100,100,100,300,100,100,300,100,300,300,100,300,300])">press this button</button>
+<textarea id="mor">hello</textarea>
+<button onclick="morsate()">morse</button>
 </body>
 </html>
