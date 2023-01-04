@@ -1,0 +1,22 @@
+<html>
+<head>
+<title>light sensor</title>
+<meta charset="utf-8">
+<script>
+if ("AmbientLightSensor" in window) {
+	const sensor = new AmbientLightSensor();
+	sensor.addEventListener("reading", (event) => {
+		document.getElementById("light").innerText="Current light level:", sensor.illuminance;
+	});
+	sensor.addEventListener("error", (event) => {
+		document.getElementById("light).innerText=event.error.name+"; "+event.error.message;
+	});
+	sensor.start();
+}
+
+</script>
+</head>
+<body>
+<div id="light"></div>
+</body>
+</html>
