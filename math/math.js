@@ -26,12 +26,13 @@ function loadJS(FILE_URL, async = false, id=null) {
 }
 
 loadJS("https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js",true,"MathJax-script");
-loadJS("https://www.desmos.com/api/v1.7/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6");
+loadJS("https://www.desmos.com/api/v1.8/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6");
 
 window.onload= () => {
 	targets=document.getElementsByTagName("graph");
 	for(target of targets){
 		let exp=target.innerHTML;
+		target.width=700; target.height=400;
 		target.innerHTML="";
 		calcs.push(Desmos.GraphingCalculator(target,{}));
 		calcs[calcs.length-1].setExpression({latex:exp});
