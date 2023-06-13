@@ -1,0 +1,18 @@
+<html>
+<head>
+<title>example</title>
+<meta charset="utf-8">
+<script>
+function main(){
+const b = document.getElementById("hold-me");
+let time;
+document.addEventListener('keydown', (event) => {
+  time = Date.now();
+}, false);
+document.addEventListener('keyup', (event) => {  document.body.innerHTML=`you held ${event.key}: ${event.code},  down for ${Date.now() - time} milliseconds`;}, false);
+}
+</script>
+</head>
+<body onload="main()">
+</body>
+</html>
