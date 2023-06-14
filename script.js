@@ -6,6 +6,7 @@ var bstop = new Audio("audio/stop.wav");
 var mic = true;
 var shiftlock = false;
 var now = new Date();
+now.setTime(now.getTime()-1000);
 
 async function main() {
   // CHANGE THIS TO A ROOM WITHIN YOUR DAILY ACCOUNT
