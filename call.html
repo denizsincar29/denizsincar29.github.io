@@ -21,7 +21,7 @@ var bleft=new Audio("audio/left.wav");
 var bstart=new Audio("audio/start.wav");
 var bstop=new Audio("audio/stop.wav");
 
-var mic=false;
+var mic=false; var shiftlock=false; var now=new Date();
 async function main() {
 	// CHANGE THIS TO A ROOM WITHIN YOUR DAILY ACCOUNT
 	const ROOM_URL = "https://denizsincar29.daily.co/deniz";
@@ -30,12 +30,10 @@ async function main() {
 		url: ROOM_URL,
 		audioSource: true,
 		videoSource: false,
-		dailyConfig: {
-			experimentalChromeVideoMuteLightOff: true
-		}
+		dailyConfig: {}
 	});
 
-	call.on("joined-meeting", () => {bjoined.play(); speak("JOINED MEETING");});
+	call.on("connected!", () => {bjoined.play(); speak("JOINED MEETING"); 	turnoff();});
 	call.on("error", e => console.error(e));
 
 	call.on("track-started", playTrack);
@@ -45,13 +43,12 @@ async function main() {
 	let name=decodeURI(location.search.slice(1));
 	if(name==""||name==null||name==undefined){name=prompt("введите ваше имя");}
 	joinRoom(name);
-	call.setLocalAudio(false);
 
 	document.addEventListener('keydown', (event) => {
-		if(event.key=='Shift'){turnon();}
+		if(event.key=='Control'){turnon();}
 	}, false);
 	document.addEventListener('keyup', (event) => {
-		if(event.key=='Shift'){turnoff();}
+		if(event.key=='Control'){turnoff();}
 	}, false);
 
 
@@ -62,13 +59,14 @@ function turnon(){
 	call.setLocalAudio(true);
 	mic=true;
 	bstart.play();
+	now=new Date();
 }
 function turnoff(){
-	if(!mic){return;}
+	if(!mic||new Date()-now<500){return;}
 	call.setLocalAudio(false);
 	mic=false;
-	speak("stop speaking");
 	bstop.play();
+
 }
 
 
