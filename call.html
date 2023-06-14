@@ -8,7 +8,7 @@
 </head>
 <body onload="main()" onbeforeunload="leaveRoom()">
 <h1>Рация</h1><br>
-<button onmousedown="turnon()" onmouseup="turnoff()">PTT</button>
+<button id="ptt" class="off" turnon()" onmouseup="turnoff()">PTT</button>
 
 <br>
 <ol id="participants"></ol>
@@ -58,13 +58,15 @@ function turnon(){
 	if(mic){return;}
 	call.setLocalAudio(true);
 	mic=true;
-	bstart.play();
+	document.getElementById("ptt").classList.add("on");
+	bstart.play();		
 	now=new Date();
 }
 function turnoff(){
 	if(!mic||new Date()-now<500){return;}
 	call.setLocalAudio(false);
 	mic=false;
+	document.getElementById("ptt").classList.remove("on");
 	bstop.play();
 
 }

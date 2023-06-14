@@ -10,3 +10,6 @@
 	white-space: nowrap !important;
 	border: 0 !important;
 }
+
+.off {color: white; background-color: red; font-size: 50px}
+.on {color: white; background-color: green; font-size: 50px}
