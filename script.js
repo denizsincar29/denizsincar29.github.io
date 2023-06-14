@@ -3,8 +3,7 @@ var bleft = new Audio("audio/left.wav");
 var bstart = new Audio("audio/start.wav");
 var bstop = new Audio("audio/stop.wav");
 
-var mic = true;
-var shiftlock = false;
+var mic = false;
 var now = new Date();
 now.setTime(now.getTime()-1000);
 
@@ -20,9 +19,9 @@ async function main() {
   });
 
   call.on("connected!", () => {
+    call.setLocalAudio(false);
     bjoined.play();
     speak("JOINED MEETING");
-    turnoff();
   });
   call.on("error", (e) => console.error(e));
 
