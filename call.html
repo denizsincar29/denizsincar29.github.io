@@ -41,10 +41,10 @@ async function main() {
 	call.setLocalAudio(false);
 
 	document.addEventListener('keydown', (event) => {
-		if(event.code==17){turnon();}
+		if(event.ctrlKey){turnon();}
 	}, false);
 	document.addEventListener('keyup', (event) => {
-		if(event.code==17){turnoff();}
+		if(event.ctrlKey){turnoff();}
 	}, false);
 
 
@@ -54,11 +54,13 @@ function turnon(){
 	if(mic){return;}
 	call.setLocalAudio(true);
 	mic=true;
+	speak("start speaking");
 }
 function turnoff(){
 	if(!mic){return;}
 	call.setLocalAudio(false);
 	mic=false;
+	speak("stop speaking");
 }
 
 
