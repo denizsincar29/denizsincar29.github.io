@@ -21,7 +21,8 @@ async function main() {
   call.on("connected!", () => {
     call.setLocalAudio(false);
     bjoined.play();
-    speak("JOINED MEETING");
+    console.log("yep!");
+    speak("Connected!");
   });
   call.on("error", (e) => console.error(e));
 
