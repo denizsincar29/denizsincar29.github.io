@@ -3,7 +3,7 @@ var bleft = new Audio("audio/left.wav");
 var bstart = new Audio("audio/start.wav");
 var bstop = new Audio("audio/stop.wav");
 
-var mic = false;
+var mic = true;
 var shiftlock = false;
 var now = new Date();
 
