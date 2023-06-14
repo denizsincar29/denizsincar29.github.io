@@ -43,10 +43,10 @@ async function main() {
 	call.setLocalAudio(false);
 
 	document.addEventListener('keydown', (event) => {
-		if(event.ctrlKey){turnon();}
+		if(event.key=='Shift'){turnon();}
 	}, false);
 	document.addEventListener('keyup', (event) => {
-		if(event.ctrlKey){turnoff();}
+		if(event.key=='Shift'){turnoff();}
 	}, false);
 
 
