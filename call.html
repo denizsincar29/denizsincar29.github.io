@@ -16,6 +16,11 @@
 
 
 	<script>
+var bjoined=new Audio("audio/joined.wav");
+var bleft=new Audio("audio/left.wav");
+var bstart=new Audio("audio/start.wav");
+var bstop=new Audio("audio/stop.wav");
+
 var mic=false;
 async function main() {
 	// CHANGE THIS TO A ROOM WITHIN YOUR DAILY ACCOUNT
@@ -30,7 +35,7 @@ async function main() {
 		}
 	});
 
-	call.on("joined-meeting", () => speak("JOINED MEETING"));
+	call.on("joined-meeting", () => {bjoined.play(); speak("JOINED MEETING");});
 	call.on("error", e => console.error(e));
 
 	call.on("track-started", playTrack);
@@ -56,13 +61,14 @@ function turnon(){
 	if(mic){return;}
 	call.setLocalAudio(true);
 	mic=true;
-	speak("start speaking");
+	bstart.play();
 }
 function turnoff(){
 	if(!mic){return;}
 	call.setLocalAudio(false);
 	mic=false;
 	speak("stop speaking");
+	bstop.play();
 }
 
 
@@ -77,7 +83,7 @@ async function leaveRoom() {
 
 function playTrack(evt) {
 	console.log("[TRACK STARTED]", evt.participant && evt.participant.session_id);
-
+	bstart.play();
 	// sanity check to make sure this is an audio track
 	if (!(evt.track && evt.track.kind === "audio")) {
 		console.error("!!! playTrack called without an audio track !!!", evt);
@@ -94,7 +100,7 @@ function playTrack(evt) {
 
 function destroyTrack(evt) {
 	console.log("[TRACK STOPPED]", (evt.participant && evt.participant.session_id) || "[left meeting]");
-
+	bstop.play();
 	let els = Array.from(document.getElementsByTagName("video")).concat(Array.from(document.getElementsByTagName("audio")));
 	for (let el of els) {
 		if (el.srcObject && el.srcObject.getTracks()[0] === evt.track) {
@@ -104,11 +110,13 @@ function destroyTrack(evt) {
 }
 
 function part_joined(evt){
+	bjoined.play();
 	speak(evt["participant"]["user_name"]+" joined!");
 	updateParticipants(evt);
 }
 
 function part_left(evt){
+	bleft.play();
 	speak(evt["participant"]["user_name"]+" left!");
 	updateParticipants(evt);
 }
