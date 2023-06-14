@@ -14,8 +14,7 @@
 
 
 	<script>
-// joinRoom, leaveRoom, to toggle call.setLocalAudio(!call.localAudio())
-
+var mic=false;
 async function main() {
 	// CHANGE THIS TO A ROOM WITHIN YOUR DAILY ACCOUNT
 	const ROOM_URL = "https://denizsincar29.daily.co/deniz";
@@ -39,7 +38,29 @@ async function main() {
 	let name=decodeURI(location.search.slice(1));
 	if(name==""||name==null||name==undefined){name=prompt("введите ваше имя");}
 	joinRoom(name);
+	call.setLocalAudio(false);
+
+	document.addEventListener('keydown', (event) => {
+		if(event.code==17){turnon();}
+	}, false);
+	document.addEventListener('keyup', (event) => {
+		if(event.code==17){turnoff();}
+	}, false);
+
+
 }
+
+function turnon(){
+	if(mic){return;}
+	call.setLocalAudio(true);
+	mic=true;
+}
+function turnoff(){
+	if(!mic){return;}
+	call.setLocalAudio(false);
+	mic=false;
+}
+
 
 async function joinRoom(uname) {
 	await call.join({userName:uname});

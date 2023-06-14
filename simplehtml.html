@@ -4,15 +4,10 @@
 <meta charset="utf-8">
 <script>
 function main(){
-const b = document.getElementById("hold-me");
-let time;
-document.addEventListener('keydown', (event) => {
-  time = Date.now();
-}, false);
-document.addEventListener('keyup', (event) => {  document.body.innerHTML=`you held ${event.key}: ${event.code},  down for ${Date.now() - time} milliseconds`;}, false);
-}
+const b = document.getElementById("pressme");
 </script>
 </head>
 <body onload="main()">
+  <button id=""pressme onmousedown="console.log('mouse down!')" onmouseup="console.log('mouse up')">press me!</button>
 </body>
 </html>
