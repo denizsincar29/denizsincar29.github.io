@@ -13,13 +13,13 @@
 
 .button {
   color: rgb(0, 0, 0);
-  background-color: red;
+  background-color: gray;
   font-size: 50px;
   width: 170px;
 }
 
 .on {
-  background-color: green;
+  background-color: red;
 }
 
 .names-list {
