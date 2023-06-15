@@ -55,13 +55,10 @@ async function main() {
     false
   );
   ptt=document.getElementById("ptt");
-  if(mobileAndTabletCheck()){
-    ptt.addEventListener("touchstart", turnon);
-    ptt.addEventListener("touchend", turnoff);
-  } else {
-    ptt.addEventListener("mousedown", turnon);
-    ptt.addEventListener("mouseup", turnoff);
-  }
+  var mobile=mobileAndTabletCheck();
+  ptt.addEventListener(mobile?"touchstart":"mousedown", turnon);
+  ptt.addEventListener(mobile?"touchend":"mouseup", turnoff);
+
 }
 
 function turnon() {
