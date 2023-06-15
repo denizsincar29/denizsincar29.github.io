@@ -19,10 +19,10 @@ async function main() {
   });
 
   call.on("connected!", () => {
-    call.setLocalAudio(false);
     bjoined.play();
     console.log("yep!");
     speak("Connected!");
+    setTimeout(turnon, 500); setTimeout(turnoff, 800); // check microphone.
   });
   call.on("error", (e) => console.error(e));
 
