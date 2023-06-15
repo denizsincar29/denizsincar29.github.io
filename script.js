@@ -9,7 +9,7 @@ now.setTime(now.getTime()-1000);
 
 async function main() {
   // CHANGE THIS TO A ROOM WITHIN YOUR DAILY ACCOUNT
-  const ROOM_URL = "https://denizsincar29.daily.co/deniz";
+  const ROOM_URL = "https://denizsincar29.daily.co/wc0";
 
   window.call = DailyIframe.createCallObject({
     url: ROOM_URL,
