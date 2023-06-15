@@ -16,6 +16,11 @@
   background-color: gray;
   font-size: 50px;
   width: 170px;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select:none;
+  -o-user-select:none;
 }
 
 .on {
