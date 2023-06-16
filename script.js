@@ -2,6 +2,7 @@ var bjoined = new Audio("audio/joined.wav");
 var bleft = new Audio("audio/left.wav");
 var bstart = new Audio("audio/start.wav");
 var bstop = new Audio("audio/stop.wav");
+bjoined.muted=true; bleft.muted=true; bstart.muted=true; bstop.muted=true;
 
 var mic = false;
 var now = new Date();
