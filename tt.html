@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Parse query parameters
+        function getQueryParams() {
+            const params = {};
+            window.location.search.substring(1).split("&").forEach(function (pair) {
+                if (!pair) return;
+                const parts = pair.split("=");
+                const key = decodeURIComponent(parts[0]);
+                const value = decodeURIComponent(parts[1] || "");
+                params[key] = value;
+            });
+            return params;
+        }
+
+        window.onload = function () {
+            const params = getQueryParams();
+            if (params.address) {
+                // Remove address from params and build the rest of the query string
+                const address = params.address;
+                delete params.address;
+                const paramString = Object.keys(params)
+                    .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(params[key]))
+                    .join("&");
+                // Build tt:// URL
+                const ttUrl = "tt://" + address + (paramString ? "?" + paramString : "");
+                // Redirect
+                window.location.href = ttUrl;
+            } else {
+                // If no address is provided, show an error message
+                document.getElementById("status").innerText = "Error: No address provided.";
+            }
+        };
+    </script>
+</head>
+
+</head>
+<body>
+<h1>Redirecting...</h1>
+<p id=""status">Redirecting</p>
+</body>
+</html>
