@@ -27,6 +27,7 @@
                 // Build tt:// URL
                 const ttUrl = "tt://" + address + (paramString ? "?" + paramString : "");
                 // Redirect
+                document.getElementById("status").innerText = "Redirecting to: " + ttUrl;
                 window.location.href = ttUrl;
             } else {
                 // If no address is provided, show an error message
