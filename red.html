@@ -17,6 +17,11 @@
 
         window.onload = function () {
             const params = getQueryParams();
+            let protocol = "tt";
+            if(params.prot){
+                protocol = params.prot;
+                delete params.prot;
+            }
             if (params.address) {
                 // Remove address from params and build the rest of the query string
                 const address = params.address;
@@ -25,10 +30,10 @@
                     .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(params[key]))
                     .join("&");
                 // Build tt:// URL
-                const ttUrl = "tt://" + address + (paramString ? "?" + paramString : "");
+                const Url = protocol + "://" + address + (paramString ? "?" + paramString : "");
                 // Redirect
-                document.getElementById("status").innerText = "Redirecting to: " + ttUrl;
-                window.location.href = ttUrl;
+                document.getElementById("status").innerText = "Redirecting to: " + Url;
+                window.location.href = Url;
             } else {
                 // If no address is provided, show an error message
                 document.getElementById("status").innerText = "Error: No address provided.";
