@@ -1,0 +1,115 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #ffffff;
+    padding: 25px 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+h2 {
+    color: #34495e;
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+.meta-info {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+p, li {
+    margin-bottom: 12px;
+    text-align: justify;
+}
+
+ol, ul {
+    padding-left: 25px;
+}
+
+ol > li {
+    margin-bottom: 10px;
+}
+
+ul > li {
+    margin-bottom: 5px;
+}
+
+strong {
+    color: #c0392b;
+}
+
+#action-area {
+    margin-top: 40px;
+    text-align: center;
+    padding: 20px;
+    background-color: #ecf0f1;
+    border-radius: 8px;
+}
+
+#timer-message {
+    font-size: 1.1em;
+    color: #2980b9;
+    margin-bottom: 15px;
+}
+
+#countdown {
+    font-weight: bold;
+}
+
+.button {
+    display: inline-block;
+    background-color: #27ae60;
+    color: white;
+    padding: 12px 25px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button:hover {
+    background-color: #229954;
+    transform: translateY(-2px);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+    .container {
+        padding: 20px 15px;
+    }
+    h1 {
+        font-size: 1.8em;
+    }
+    h2 {
+        font-size: 1.4em;
+    }
+    .button {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+}
