@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>My Docs</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/fontawesome.min.css" rel="stylesheet">
+        <link href="css/brands.min.css" rel="stylesheet">
+        <link href="css/solid.min.css" rel="stylesheet">
+        <link href="css/v4-font-face.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <link href="assets/_markdown_exec_pyodide.css" rel="stylesheet">
+        <link href="assets/_markdown_exec_ansi.css" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href=".">My Docs</a>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#1" class="nav-link">1. Теоретические основы методов анализа данных</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#11" class="nav-link">1.1. Метод наименьших квадратов (МНК)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#12" class="nav-link">1.2. Метод моментов (ММ)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#13" class="nav-link">1.3. Метод максимального правдоподобия (ММП)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#14" class="nav-link">1.4. Корреляционный анализ</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-bs-level="1"><a href="#python" class="nav-link">Практическая часть: Анализ данных в Python</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#2" class="nav-link">2. Анализ усреднённых фактических расходов</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#_2" class="nav-link">Все графики будут отображены внизу страницы, после выполнения кода.</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#3_1" class="nav-link">3. Описательная статистика по данным из файла (творческое задание).</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="1">1. Теоретические основы методов анализа данных</h1>
+<h2 id="11">1.1. Метод наименьших квадратов (МНК)</h2>
+<p>Метод наименьших квадратов (МНК) — это один из наиболее распространенных и фундаментальных методов в математической статистике и регрессионном анализе. Его основная задача — найти оптимальные параметры математической модели, которая наилучшим образом описывает зависимость между переменными на основе имеющихся данных. Ключевая идея МНК заключается в минимизации суммы квадратов отклонений (остатков) между наблюдаемыми (фактическими) значениями зависимой переменной и значениями, предсказанными выбранной моделью. Это означает, что метод ищет такую функцию (например, прямую линию в случае линейной регрессии), для которой сумма квадратов вертикальных расстояний от каждой точки данных до этой функции является минимальной. Именно это "наименьшее" количество квадратов и дало методу его имя.
+Для простой линейной регрессии, представляемой уравнением <span class="arithmatex">\(<span class="arithmatex">\(y=a+bx\)</span>\)</span>, параметры a и b вычисляются по следующим формулам:
+- Коэффициент наклона (b): <span class="arithmatex">\(<span class="arithmatex">\(b = (n * \Sigma X Y - \Sigma X * Sigma Y) / (n * Sigma X^2 - (\Sigma X)^2)\)</span>\)</span>
+- Свободный член (a): <span class="arithmatex">\(<span class="arithmatex">\(a = (\Sigma Y - b * \Sigma X) / n\)</span>\)</span>
+Здесь n представляет количество точек данных, ΣX — сумму всех значений X, ΣY — сумму всех значений Y, ΣXY — сумму произведений X и Y для каждой точки, и ΣX^2 — сумму квадратов значений X.
+МНК может быть использован для определения линейной или полиномиальной зависимости между переменными. А ещё он хорошо работает в зашумлённых данных. Метод наименьших квадратов, за счет минимизации суммы квадратов ошибок, эффективно усредняет влияние случайного шума в данных.
+Важным ограничением МНК является его чувствительность к выбросам (аномальным значениям) в данных, которые могут существенно исказить результаты модели. Это означает, что для надежного применения МНК крайне важен этап предварительной обработки данных.</p>
+<h2 id="12">1.2. Метод моментов (ММ)</h2>
+<p>Метод моментов (ММ) — это один из старейших и наиболее интуитивно понятных методов оценки неизвестных параметров распределений в математической статистике и эконометрике. Он был предложен Карлом Пирсоном в 1894 году. Основная идея ММ заключается в замене теоретических моментов (например, математического ожидания, дисперсии) исследуемого распределения их выборочными аналогами (эмпирическими моментами), которые вычисляются непосредственно из наблюдаемых данных. Если распределение имеет k неизвестных параметров, то для их оценки необходимо составить систему из k уравнений, приравняв первые k выборочных моментов к соответствующим теоретическим моментам. Решение этой системы уравнений дает оценки параметров.
+ММ используется для получения оценок параметров распределений, когда аналитические формулы для теоретических моментов известны и относительно просты. Например, для оценки среднего значения (μ) и дисперсии (σ²) нормального распределения, можно приравнять выборочное среднее к μ, а выборочную дисперсию к σ².</p>
+<h2 id="13">1.3. Метод максимального правдоподобия (ММП)</h2>
+<p>Метод максимального правдоподобия (ММП) — это один из наиболее мощных и широко используемых статистических методов для оценки параметров модели. Его основная идея заключается в нахождении таких значений параметров, которые делают наблюдаемые данные наиболее "правдоподобными" или вероятными. Центральным понятием является функция правдоподобия L(параметры | данные), которая выражает вероятность наблюдения данного набора данных при заданных значениях параметров модели. Цель ММП — найти параметры, максимизирующие эту функцию.
+Для упрощения математических вычислений, особенно при дифференцировании, часто используется логарифм от функции правдоподобия. Поскольку логарифм является монотонной функцией, максимизация логарифма функции правдоподобия эквивалентна максимизации самой функции правдоподобия, но при этом произведение вероятностей преобразуется в сумму, что значительно упрощает дальнейшие шаги.
+ММП применяется в широком спектре статистических моделей, включая линейные и обобщенные линейные модели, факторный анализ, моделирование структурных уравнений. Он также используется в задачах проверки статистических гипотез и построения доверительных интервалов. Широко применяется в различных областях, таких как биостатистика, эконометрика, машинное обучение и др.</p>
+<h2 id="14">1.4. Корреляционный анализ</h2>
+<p>Корреляционный анализ — это статистический метод, предназначенный для измерения силы и направления статистической связи (взаимосвязи) между двумя или более переменными. Коэффициент корреляции, как правило, принимает значения в диапазоне от -1 до +1. Значение +1 указывает на сильную прямую (положительную) связь, -1 — на сильную обратную (отрицательную) связь, а 0 — на отсутствие линейной связи.
+Применение корреляционного анализа включает оценку взаимосвязей между различными показателями в экономике, маркетинге (например, между маркетинговыми инвестициями и их результатами) , а также идентификацию потенциальных взаимосвязей для дальнейшего, более глубокого анализа.
+Для корректного применения параметрических методов корреляции (например, коэффициента Пирсона) необходимо, чтобы совокупность значений признаков подчинялась многомерному нормальному распределению.
+Важно помнить, что наличие высокой корреляции между двумя переменными (X и Y) не дает основания утверждать, что одна переменная является причиной изменения другой.
+Существует несколько причин, по которым корреляция может наблюдаться без причинно-следственной связи: обе переменные могут быть вызваны третьим, неучтенным фактором; связь может быть случайной; или направление причинности может быть обратным (например, не маркетинговые расходы увеличивают продажи, а рост продаж позволяет увеличить маркетинговый бюджет.</p>
+<h3 id="141">1.4.1. Ранговый коэффициент корреляции Спирмена</h3>
+<p>Коэффициент ранговой корреляции Спирмена (обозначается как ρ или rs) — это непараметрическая мера монотонной связи между двумя переменными. Он оценивает, насколько хорошо отношение между двумя переменными может быть описано монотонной функцией (то есть, если одна переменная увеличивается, другая также имеет тенденцию к увеличению, но не обязательно линейно). Поскольку он основан на рангах данных, а не на их фактических значениях, он устойчив к выбросам и не требует предположения о нормальности распределения данных.
+Этапы расчета коэффициента Спирмена включают:
+1. Присвоение рангов (как по возрастанию, так и по убыванию). Каждому значению присваивается ранг.
+2. Определение разностей рангов (d): Для каждой пары наблюдений вычисляется разность между их рангами по двум переменным (<span class="arithmatex">\(<span class="arithmatex">\(d = R(Xi) - R(Yi)\)</span>\)</span>).
+3. Возведение в квадрат и суммирование: Каждая полученная разность d возводится в квадрат, и затем все квадраты суммируются (<span class="arithmatex">\(<span class="arithmatex">\(\sigma d^2\)</span>\)</span>).
+4. Вычисление коэффициента по формуле: Если все ранги являются различными целыми числами (нет связанных рангов): <span class="arithmatex">\(<span class="arithmatex">\(\rho = 1 - (6 * \Sigma d^2i) / (n * (n^2 − 1))\)</span>\)</span>, где n — число наблюдений. При наличии связанных рангов используется более сложная формула, которая учитывает поправки на связанные ранги, или же можно использовать формулу Пирсона для ранжированных данных.</p>
+<p>Ключевое преимущество ранговых коэффициентов корреляции, таких как Спирмен, заключается в их непараметрической природе. Это означает, что они не требуют предположений о нормальности распределения данных, что часто является проблемой в реальных наборах данных. Более того, они могут быть применены к порядковым (качественным) данным, где значения имеют естественный порядок, но не являются числовыми в строгом смысле (например, "низкий", "средний", "высокий").</p>
+<h3 id="142">1.4.2. Коэффициент ранговой корреляции Кендалла Тау</h3>
+<p>Коэффициент ранговой корреляции Кендалла Тау (τ) — это еще одна непараметрическая мера монотонной связи, которая является альтернативой коэффициенту Спирмена и часто предпочтительнее для малых размеров выборок. Метод основан на анализе пар наблюдений и подсчете количества согласованных и несогласованных пар.
+- Согласованная пара (nC): Пара наблюдений (x1, y1) и (x2, y2) считается согласованной, если <span class="arithmatex">\(<span class="arithmatex">\(sgn(x2-x1) = sgn(y2-y1)\)</span>\)</span>. То есть, если x2 &gt; x1 и y2 &gt; y1, или x2 &lt; x1 и y2 &lt; y1.
+- Несогласованная пара (nD): Пара наблюдений считается несогласованной, если <span class="arithmatex">\(<span class="arithmatex">\(sgn(x2-x1) = -sgn(y2-y1)\)</span>\)</span>. То есть, если x2 &gt; x1 и y2 &lt; y1, или x2 &lt; x1 и y2 &gt; y1.
+Формула для тау-а (τA), базового типа, без связанных рангов :
+<span class="arithmatex">\(<span class="arithmatex">\(\tau_A = (nC - nD) / (0.5 \cdot n \cdot (n - 1))\)</span>\)</span>
+или
+<span class="arithmatex">\(<span class="arithmatex">\(\tau_A = 1 - (4 \cdot nD) / (n \cdot (n - 1))\)</span>\)</span>.
+Существуют модификации коэффициента Кендалла, такие как τB и τC, которые учитывают наличие связанных рангов (одинаковых значений). Тау-б, в частности, часто используется в бизнес-аналитике и имеет поправки на связанные ранги.</p>
+<h1 id="python">Практическая часть: Анализ данных в Python</h1>
+<h2 id="2">2. Анализ усреднённых фактических расходов</h2>
+<h3 id="_1">Загрузка и подготовка данных</h3>
+<p>Первым делом необходимо загрузить CSV файл, содержащий данные о расходах, и проверить его на наличие пропусков, несостыковок в типах и других проблемах. Чаще всего, для анализа данных используется библиотека Pandas, и использовать будем именно её, потому что новый быстрый Polars не запускается в pyodide/md
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.16.0/ace.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<link title="light" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow.min.css" disabled="disabled">
+<link title="dark" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow-night-blue.min.css" disabled="disabled">
+
+<div class="pyodide">
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Editor (session: default)</span><span id="exec-1--run" title="Run: press Ctrl-Enter" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7-11-7Z"></path></svg></span> Run</span>
+</div>
+<div><pre id="exec-1--editor" class="pyodide-editor">import pandas as pd
+from js import document
+from pyodide.http import open_url
+import matplotlib
+matplotlib.use("module://matplotlib_pyodide.html5_canvas_backend")
+
+url_2_csv = "https://denizsincar29.github.io/2.csv"
+url_3_csv = "https://denizsincar29.github.io/3.csv"
+
+# Простая функция для вывода DataFrame в HTML таблице
+def hprint(xdf, id):
+    # check if df is not string, call to_html
+    if not isinstance(xdf, str):
+        xdf = xdf.to_html(classes='table table-striped table-bordered', index=False)
+    document.getElementById(str(id)).innerHTML = xdf
+
+with open_url(url_2_csv) as f_2:
+    df = pd.read_csv(f_2)
+
+hprint(df.head(), "head")
+print("\nПроверка на пропуски:")
+print(df.isnull().sum())  # Проверка на пропуски в каждом столбце
+print("\nОбщая информация о DataFrame:")
+print(df.info())</pre></div>
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Output</span><span id="exec-1--clear" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.77-.78 2.04 0 2.83L5.03 20h7.66l8.72-8.73c.79-.77.79-2.04 0-2.83l-4.85-4.85c-.39-.39-.91-.59-1.42-.59M17 18l-2 2h7v-2"></path></svg></span> Clear</span>
+</div>
+<pre><code id="exec-1--output" class="pyodide-output"></code></pre>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupPyodide('exec-1--', install=['pandas', 'numpy', 'matplotlib', 'matplotlib-pyodide', 'scipy', 'scikit-learn'], themeLight='tomorrow', themeDark='tomorrow_night', session='default');
+});
+</script>
+</p>
+<div id="head">Запустите код, чтобы увидеть таблицу</div>
+<hr />
+<p>По выводу кода выше, мы видим, что пропусков и неправильных типов нет, и мы можем продолжать анализ, не беспокоясь о предворительной обработке данных.</p>
+<h3 id="x-y">Построить по признакам X и Y интервальные вариационные ряды, количество интервалов определить по формуле Стерджеса. Построить полигон и гистограмму для каждого из признаков.</h3>
+<p>Для рассчёта количества интервалов по формуле Стерджеса используется следующая формула:
+<span class="arithmatex">\(<span class="arithmatex">\(k = 1 + 3.322 \cdot \log_{10}(n)\)</span>\)</span>
+где n — количество наблюдений в выборке. Эта формула позволяет определить оптимальное количество интервалов для построения гистограммы, чтобы избежать избыточной детализации или потери информации.
+Для построения интервальных рядов и гистограмм в Python мы будем использовать библиотеки Pandas и Matplotlib.
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.16.0/ace.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<link title="light" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow.min.css" disabled="disabled">
+<link title="dark" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow-night-blue.min.css" disabled="disabled">
+
+<div class="pyodide">
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Editor (session: default)</span><span id="exec-2--run" title="Run: press Ctrl-Enter" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7-11-7Z"></path></svg></span> Run</span>
+</div>
+<div><pre id="exec-2--editor" class="pyodide-editor">import numpy as np
+import matplotlib.pyplot as plt
+
+# у нас есть столбцы "№", "X" и "Y"
+n = len(df)
+k = 1 + 3.322 * np.log10(n)  # Формула Стерджеса для количества интервалов
+k = int(round(k))
+
+print(f"Количество интервалов по Стерджесу: {k}")
+
+# Интервальный ряд для X
+range_X = df['X'].max() - df['X'].min()
+interval_width_X = range_X / k
+
+# Создание гистограммы для X
+bins_X = np.arange(df['X'].min(), df['X'].max() + interval_width_X, interval_width_X)
+counts_X, bin_edges_X = np.histogram(df['X'], bins=bins_X)
+bin_centers_X = (bin_edges_X[:-1] + bin_edges_X[1:]) / 2
+
+interval_series_X = pd.DataFrame({
+    'Interval': [f'[{bin_edges_X[i]:.2f}, {bin_edges_X[i+1]:.2f})' for i in range(len(bin_edges_X)-1)],
+    'Frequency': counts_X,
+    'Relative Frequency': counts_X / n
+})
+hprint(interval_series_X, "interval_X")
+
+# Построение полигона и гистограммы для X
+# Примечание! В pyodide графики отображаются в самом низу страницы, а не внизу вывода.
+plt.figure(figsize=(10, 6))
+plt.hist(df['X'], bins=bins_X, edgecolor='black', alpha=0.7)
+plt.title('Histogram for Feature X')
+plt.xlabel('X Values')
+plt.ylabel('Frequency')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(bin_centers_X, counts_X, marker='o', linestyle='-', color='blue')
+plt.title('Frequency Polygon for Feature X')
+plt.xlabel('X Values (Midpoints of Intervals)')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()
+
+# Интервальный ряд для Y
+range_Y = df['Y'].max() - df['Y'].min()
+interval_width_Y = range_Y / k
+bins_Y = np.arange(df['Y'].min(), df['Y'].max() + interval_width_Y, interval_width_Y)
+counts_Y, bin_edges_Y = np.histogram(df['Y'], bins=bins_Y)
+bin_centers_Y = (bin_edges_Y[:-1] + bin_edges_Y[1:]) / 2
+
+interval_series_Y = pd.DataFrame({
+    'Interval': [f'[{bin_edges_Y[i]:.2f}, {bin_edges_Y[i+1]:.2f})' for i in range(len(bin_edges_Y)-1)],
+    'Frequency': counts_Y,
+    'Relative Frequency': counts_Y / n
+})
+hprint(interval_series_Y, "interval_Y")
+# Построение полигона и гистограммы для Y
+plt.figure(figsize=(10, 6))
+plt.hist(df['Y'], bins=bins_Y, edgecolor='black', alpha=0.7)
+plt.title('Histogram for Feature Y')
+plt.xlabel('Y Values')
+plt.ylabel('Frequency')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(bin_centers_Y, counts_Y, marker='o', linestyle='-', color='blue')
+plt.title('Frequency Polygon for Feature Y')
+plt.xlabel('Y Values (Midpoints of Intervals)')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()</pre></div>
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Output</span><span id="exec-2--clear" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.77-.78 2.04 0 2.83L5.03 20h7.66l8.72-8.73c.79-.77.79-2.04 0-2.83l-4.85-4.85c-.39-.39-.91-.59-1.42-.59M17 18l-2 2h7v-2"></path></svg></span> Clear</span>
+</div>
+<pre><code id="exec-2--output" class="pyodide-output"></code></pre>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupPyodide('exec-2--', install=[], themeLight='tomorrow', themeDark='tomorrow_night', session='default');
+});
+</script>
+</p>
+<hr />
+<p>Вывод интервалов для признака X:</p>
+<div id="interval_X">Запустите код, чтобы увидеть таблицу</div>
+<p>Вывод интервалов для признака Y:</p>
+<div id="interval_Y">Запустите код, чтобы увидеть таблицу</div>
+<h2 id="_2">Все графики будут отображены внизу страницы, после выполнения кода.</h2>
+<p>Исходя из полученных гистограмм, можно сделать следующие выводы:
+Для признака X наиболее часто встречающиеся значения находятся в интервале от 28.00 до 36.00, указывая на центральную тенденцию в этой области. Признак Y, в свою очередь, показывает наибольшую концентрацию значений в интервале от 35.00 до 45.00, что говорит о смещении его распределения в сторону более высоких значений.</p>
+<h3 id="2_1">2. Оценить статистические характеристики рядов распределения.</h3>
+<p>2.1. Показатели центра распределения: средняя, мода, медиана.
+2.2. Показатели колеблемости признака: размах вариации, дисперсия, среднее квадратическое отклонение, коэффициент вариации, коэффициент асимметрии, коэффициент эксцесса.</p>
+<p>Для оценки статистических характеристик рядов распределения в Python можно использовать методы библиотеки Pandas. Мы будем рассчитывать следующие показатели:
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.16.0/ace.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<link title="light" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow.min.css" disabled="disabled">
+<link title="dark" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow-night-blue.min.css" disabled="disabled">
+
+<div class="pyodide">
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Editor (session: default)</span><span id="exec-3--run" title="Run: press Ctrl-Enter" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7-11-7Z"></path></svg></span> Run</span>
+</div>
+<div><pre id="exec-3--editor" class="pyodide-editor"># Расчет статистических характеристик для признака X
+mean_X = df['X'].mean()  # Среднее
+median_X = df['X'].median()  # Медиана
+mode_X = df['X'].mode()[0]  # Мода
+range_X = df['X'].max() - df['X'].min()  # Размах вариации
+variance_X = df['X'].var(ddof=1) # ddof=1 для выборочной дисперсии
+std_dev_X = df['X'].std(ddof=1) # ddof=1 для выборочного стандартного отклонения
+coeff_variation_X = (std_dev_X / mean_X) * 100 # в процентах
+skewness_X = df['X'].skew()
+kurtosis_X = df['X'].kurt()
+
+# Расчет статистических характеристик для признака Y
+mean_Y = df['Y'].mean()  # Среднее
+median_Y = df['Y'].median()  # Медиана
+mode_Y = df['Y'].mode()[0]  # Мода
+range_Y = df['Y'].max() - df['Y'].min()  # Размах вариации
+variance_Y = df['Y'].var(ddof=1) # ddof=1 для выборочной дисперсии
+std_dev_Y = df['Y'].std(ddof=1) # ddof=1 для выборочного стандартного отклонения
+coeff_variation_Y = (std_dev_Y / mean_Y) * 100 # в процентах
+skewness_Y = df['Y'].skew()
+kurtosis_Y = df['Y'].kurt()
+
+# Создание DataFrame для статистических характеристик признака X и y
+stats = pd.DataFrame({
+    'Statistic': ['Mean', 'Median', 'Mode', 'Range', 'Variance', 'Std Dev', 'Coeff of Variation (%)', 'Skewness', 'Kurtosis'],
+    'X': [mean_X, median_X, mode_X, range_X, variance_X, std_dev_X, coeff_variation_X, skewness_X, kurtosis_X],
+    'Y': [mean_Y, median_Y, mode_Y, range_Y, variance_Y, std_dev_Y, coeff_variation_Y, skewness_Y, kurtosis_Y]
+})
+hprint(stats, "stats")</pre></div>
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Output</span><span id="exec-3--clear" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.77-.78 2.04 0 2.83L5.03 20h7.66l8.72-8.73c.79-.77.79-2.04 0-2.83l-4.85-4.85c-.39-.39-.91-.59-1.42-.59M17 18l-2 2h7v-2"></path></svg></span> Clear</span>
+</div>
+<pre><code id="exec-3--output" class="pyodide-output"></code></pre>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupPyodide('exec-3--', install=[], themeLight='tomorrow', themeDark='tomorrow_night', session='default');
+});
+</script>
+</p>
+<div id="stats">Запустите код, чтобы увидеть таблицу</div>
+<hr />
+<p>Признак X демонстрирует распределение, близкое к симметричному (показатель асимметрии 0.04), со значениями, сосредоточенными вокруг среднего (28.05) и медианы (28.00). Относительно невысокий коэффициент вариации (45.39%) указывает на умеренное рассеяние данных.
+Признак Y имеет более широкий разброс значений, о чем свидетельствует значительно больший размах (60.00) и высокий коэффициент вариации (67.30%) по сравнению с X. Его распределение также слегка асимметрично (показатель асимметрии -0.18), но в целом напоминает колоколообразную форму с небольшим "сплющиванием" (отрицательный эксцесс).</p>
+<h3 id="3">3. На основе одного из критериев согласия Пирсона проверить гипотезу о законе нормального распределения.</h3>
+<p>Для проверки гипотезы о нормальности распределения признаков X и Y можно использовать критерий согласия Пирсона (χ²). Этот критерий позволяет сравнить наблюдаемое распределение данных с теоретическим нормальным распределением. Для этого необходимо:
+1. Разделить данные на интервалы (как мы уже сделали ранее).
+2. Рассчитать ожидаемое количество наблюдений в каждом интервале, исходя из нормального распределения с параметрами, полученными ранее (среднее и стандартное отклонение).
+3. Вычислить χ²-статистику по формуле:</p>
+<p>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.16.0/ace.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<link title="light" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow.min.css" disabled="disabled">
+<link title="dark" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow-night-blue.min.css" disabled="disabled">
+
+<div class="pyodide">
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Editor (session: default)</span><span id="exec-4--run" title="Run: press Ctrl-Enter" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7-11-7Z"></path></svg></span> Run</span>
+</div>
+<div><pre id="exec-4--editor" class="pyodide-editor">from scipy.stats import chisquare, norm
+# Функция для расчета ожидаемых частот на основе нормального распределения
+def expected_frequencies(data, bins):
+    mean = data.mean()
+    std_dev = data.std(ddof=1)
+    expected_freq = []
+    total_prob = 0
+    n = len(data)
+
+    # Сначала вычисляем все вероятности
+    for i in range(len(bins) - 1):
+        lower_bound = bins[i]
+        upper_bound = bins[i + 1]
+        prob = norm.cdf(upper_bound, loc=mean, scale=std_dev) - norm.cdf(lower_bound, loc=mean, scale=std_dev)
+        expected_freq.append(prob * n)
+        total_prob += prob
+
+    # Нормализуем частоты, чтобы сумма совпадала с наблюдаемой
+    expected_freq = [freq * (n / (total_prob * n)) for freq in expected_freq]
+    return expected_freq
+
+# Расчет ожидаемых частот для признака X
+expected_freq_X = expected_frequencies(df['X'], bin_edges_X)
+
+# Расчет ожидаемых частот для признака Y
+expected_freq_Y = expected_frequencies(df['Y'], bin_edges_Y)
+# Расчет χ²-статистики для признака X
+chi2_X, p_X = chisquare(counts_X, f_exp=expected_freq_X)
+# Расчет χ²-статистики для признака Y
+chi2_Y, p_Y = chisquare(counts_Y, f_exp=expected_freq_Y)
+# Создание DataFrame для результатов теста
+results = pd.DataFrame({
+    'Feature': ['X', 'Y'],
+    'Chi-squared': [chi2_X, chi2_Y],
+    'p-value': [p_X, p_Y]
+})
+hprint(results, "chi2_results")</pre></div>
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Output</span><span id="exec-4--clear" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.77-.78 2.04 0 2.83L5.03 20h7.66l8.72-8.73c.79-.77.79-2.04 0-2.83l-4.85-4.85c-.39-.39-.91-.59-1.42-.59M17 18l-2 2h7v-2"></path></svg></span> Clear</span>
+</div>
+<pre><code id="exec-4--output" class="pyodide-output"></code></pre>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupPyodide('exec-4--', install=[], themeLight='tomorrow', themeDark='tomorrow_night', session='default');
+});
+</script>
+</p>
+<div id="chi2_results">Запустите код, чтобы увидеть таблицу</div>
+<hr />
+<p>Критерий согласия Пирсона показывает, что распределение признака X не противоречит гипотезе о нормальном распределении (p-value = 0.915), в то время как для признака Y гипотеза о нормальности отвергается на уровне значимости 5% (p-value = 0.043).</p>
+<h3 id="4-x-y">4. Для параметров X и Y определить тесноту связи с помощью коэффициента корреляции.</h3>
+<p>Для оценки тесноты связи между признаками X и Y можно использовать коэффициент корреляции Пирсона. Этот коэффициент измеряет линейную зависимость между двумя переменными и принимает значения от -1 до +1, где:
+- +1 указывает на идеальную положительную линейную зависимость,
+- -1 указывает на идеальную отрицательную линейную зависимость,
+- 0 указывает на отсутствие линейной зависимости.
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.16.0/ace.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<link title="light" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow.min.css" disabled="disabled">
+<link title="dark" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow-night-blue.min.css" disabled="disabled">
+
+<div class="pyodide">
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Editor (session: default)</span><span id="exec-5--run" title="Run: press Ctrl-Enter" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7-11-7Z"></path></svg></span> Run</span>
+</div>
+<div><pre id="exec-5--editor" class="pyodide-editor">from scipy.stats import pearsonr
+
+# Расчет коэффициента корреляции для признака X и Y
+corr_XY, p_value = pearsonr(df['X'], df['Y'])
+# Создание DataFrame для результатов корреляции
+corr_results = pd.DataFrame({
+    'Feature 1': ['X'],
+    'Feature 2': ['Y'],
+    'Correlation Coefficient': [corr_XY],
+    'p-value': [p_value]
+})
+hprint(corr_results, "corr_results")</pre></div>
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Output</span><span id="exec-5--clear" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.77-.78 2.04 0 2.83L5.03 20h7.66l8.72-8.73c.79-.77.79-2.04 0-2.83l-4.85-4.85c-.39-.39-.91-.59-1.42-.59M17 18l-2 2h7v-2"></path></svg></span> Clear</span>
+</div>
+<pre><code id="exec-5--output" class="pyodide-output"></code></pre>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupPyodide('exec-5--', install=[], themeLight='tomorrow', themeDark='tomorrow_night', session='default');
+});
+</script>
+</p>
+<div id="corr_results">Запустите код, чтобы увидеть таблицу</div>
+<hr />
+<p>Коэффициент корреляции -0,321 указывает на умеренную отрицательную линейную зависимость между признаками X и Y. Это означает, что при увеличении значений X значения Y имеют тенденцию к снижению, но связь не является сильной.</p>
+<h3 id="5">5. Построить линейную функцию регрессии, найти коэффициент эластичности.</h3>
+<p>Для построения линейной функции регрессии между признаками X и Y можно использовать метод наименьших квадратов. Линейная функция регрессии имеет вид:
+<span class="arithmatex">\(<span class="arithmatex">\(Y = a + bX\)</span>\)</span>
+где a — свободный член (пересечение с осью Y), b — коэффициент наклона.
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.16.0/ace.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<link title="light" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow.min.css" disabled="disabled">
+<link title="dark" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow-night-blue.min.css" disabled="disabled">
+
+<div class="pyodide">
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Editor (session: default)</span><span id="exec-6--run" title="Run: press Ctrl-Enter" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7-11-7Z"></path></svg></span> Run</span>
+</div>
+<div><pre id="exec-6--editor" class="pyodide-editor">from sklearn.linear_model import LinearRegression
+
+# Создание модели линейной регрессии
+model = LinearRegression()
+model.fit(df[['X']], df['Y'])
+
+# Получение коэффициентов
+a = model.intercept_
+b = model.coef_[0]
+
+# Расчет коэффициента эластичности
+elasticity = b * (df['X'].mean() / df['Y'].mean())
+# Создание DataFrame для результатов регрессии
+regression_results = pd.DataFrame({
+    'Coefficient': ['Intercept (a)', 'Slope (b)', 'Elasticity'],
+    'Value': [a, b, elasticity]
+})
+hprint(regression_results, "regression_results")</pre></div>
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Output</span><span id="exec-6--clear" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.77-.78 2.04 0 2.83L5.03 20h7.66l8.72-8.73c.79-.77.79-2.04 0-2.83l-4.85-4.85c-.39-.39-.91-.59-1.42-.59M17 18l-2 2h7v-2"></path></svg></span> Clear</span>
+</div>
+<pre><code id="exec-6--output" class="pyodide-output"></code></pre>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupPyodide('exec-6--', install=[], themeLight='tomorrow', themeDark='tomorrow_night', session='default');
+});
+</script>
+</p>
+<div id="regression_results">Запустите код, чтобы увидеть таблицу</div>
+<hr />
+<p>Построенная модель линейной регрессии показывает обратную зависимость между переменными X и Y (b = -0.443). Коэффициент эластичности (-0.477), рассчитанный на основе средних значений X и Y, указывает на неэластичную связь между ними. Изменение X на 1% приводит к изменению Y примерно на 0.48% в противоположном направлении, учитывая средние значения X и Y в датасете.</p>
+<h3 id="_3">Выводы</h3>
+<p>В ходе анализа данных были выполнены следующие шаги:
+1. Построены интервальные вариационные ряды и гистограммы для признаков X и Y, что позволило визуализировать распределение данных.
+2. Рассчитаны статистические характеристики, такие как среднее, медиана, мода, размах вариации, дисперсия и другие, что дало представление о центральной тенденции и рассеянии данных.
+3. Проверена гипотеза о нормальности распределения признаков X и Y с помощью критерия согласия Пирсона, что показало, что X соответствует нормальному распределению, а Y — нет.
+4. Оценена теснота связи между признаками X и Y с помощью коэффициента корреляции Пирсона, который показал умеренную отрицательную зависимость.
+5. Построена линейная функция регрессии, которая показала обратную зависимость между переменными X и Y, а также рассчитан коэффициент эластичности, указывающий на неэластичную связь между ними.</p>
+<h2 id="3_1">3. Описательная статистика по данным из файла (творческое задание).</h2>
+<p>Для творческого задания дан файл 3.csv.</p>
+<p>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.16.0/ace.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<link title="light" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow.min.css" disabled="disabled">
+<link title="dark" rel="alternate stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/tomorrow-night-blue.min.css" disabled="disabled">
+
+<div class="pyodide">
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Editor (session: default)</span><span id="exec-7--run" title="Run: press Ctrl-Enter" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5.14v14l11-7-11-7Z"></path></svg></span> Run</span>
+</div>
+<div><pre id="exec-7--editor" class="pyodide-editor">with open_url(url_3_csv) as f_3:
+    df = pd.read_csv(f_3)
+hprint(df.head(), "head_3")
+
+REGION = "Регион"
+SHOP_NAME = "Название магазина"
+ExpenseCategory = "Статья расходов"
+
+# выведем какие бывают регионы и статьи расходов
+def print_unique_values():
+    print("Уникальные регионы:")
+    print(df[REGION].unique())
+    print("\nУникальные статьи расходов:")
+    print(df[ExpenseCategory].unique())
+
+print_unique_values()
+# Татарстан, Самарская область и Пермский край.
+# Аренда, Закупка оборудования, Зарплата, Платежи в бюджет, Коммунальные расходы.
+
+# Основные статистики по всем данным
+total_stats = df['Сумма'].describe()
+total_stats_to_print = pd.DataFrame(total_stats).T
+region_stats = df.groupby('Регион')['Сумма'].agg(['sum', 'mean', 'std', 'count'])
+region_stats_to_print = pd.DataFrame(region_stats).reset_index()
+expense_stats = df.groupby('Статья расходов')['Сумма'].agg(['sum', 'mean', 'std', 'count'])
+expense_stats_to_print = pd.DataFrame(expense_stats).reset_index()
+
+# Сводная таблица: суммарные расходы по регионам и статьям
+pivot_mean = pd.pivot_table(df, values='Сумма', index='Регион', 
+                           columns='Статья расходов', aggfunc=np.mean)
+
+# Сводная таблица: суммарные расходы по регионам и статьям
+pivot_sum = pd.pivot_table(df, values='Сумма', index='Регион', 
+                          columns='Статья расходов', aggfunc=np.sum)
+
+# Топ-5 магазинов по общим расходам
+df['Общие расходы магазина'] = df.groupby('Название магазина')['Сумма'].transform('sum')
+top_stores = df[['Название магазина', 'Общие расходы магазина']].drop_duplicates()\
+            .sort_values('Общие расходы магазина', ascending=False).head(5)
+
+# Доля каждой статьи расходов в общих расходах
+expense_share = df.groupby('Статья расходов')['Сумма'].sum() / df['Сумма'].sum() * 100
+expence_share_to_print = pd.DataFrame({'Доля (%)': expense_share}).sort_values('Доля (%)', ascending=False)
+
+# Сравнение регионов по общим расходам
+region_comparison = df.groupby('Регион')['Сумма'].sum().sort_values(ascending=False)
+region_comparison_to_print = pd.DataFrame({'Общие расходы': region_comparison})
+
+# Проверка на выбросы с помощью z-score
+df['z-score'] = np.abs((df['Сумма'] - df['Сумма'].mean()) / df['Сумма'].std())
+outliers = df[df['z-score'] > 2][['Регион', 'Название магазина', 'Статья расходов', 'Сумма']]
+
+# Выводим результаты
+# Можно заголовки не выводить, они уже проставлены в html.
+hprint(total_stats_to_print, "total_stats")
+hprint(region_stats_to_print, "region_stats")
+hprint(expense_stats_to_print, "expense_stats")
+hprint(pivot_mean, "pivot_mean")
+hprint(pivot_sum, "pivot_sum")
+hprint(top_stores, "top_stores")
+hprint(expence_share_to_print, "expense_share")
+hprint(region_comparison_to_print, "region_comparison")
+hprint(outliers, "outliers")
+
+# раскомментируйте, чтобы удалить конкретные данные из вывода
+#hprint("", total_stats)
+#hprint("", region_stats)
+#hprint("", expense_stats)
+#hprint("", pivot_mean)
+#hprint("", pivot_sum)
+#hprint("", top_stores)
+#hprint("", expence_share_to_print)
+#hprint("", region_comparison_to_print)
+#hprint("", outliers)</pre></div>
+<div class="pyodide-editor-bar">
+<span class="pyodide-bar-item">Output</span><span id="exec-7--clear" class="pyodide-bar-item pyodide-clickable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.77-.78 2.04 0 2.83L5.03 20h7.66l8.72-8.73c.79-.77.79-2.04 0-2.83l-4.85-4.85c-.39-.39-.91-.59-1.42-.59M17 18l-2 2h7v-2"></path></svg></span> Clear</span>
+</div>
+<pre><code id="exec-7--output" class="pyodide-output"></code></pre>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupPyodide('exec-7--', install=[], themeLight='tomorrow', themeDark='tomorrow_night', session='default');
+});
+</script>
+
+Вывод первых 5 строк таблицы:</p>
+<div id="head_3">Запустите код, чтобы увидеть таблицу</div>
+<p>Статистики по всем данным:</p>
+<div id="total_stats">Запустите код, чтобы увидеть таблицу</div>
+<p>Статистики по регионам:</p>
+<div id="region_stats">Запустите код, чтобы увидеть таблицу</div>
+<p>Статистики по статьям расходов:</p>
+<div id="expense_stats">Запустите код, чтобы увидеть таблицу</div>
+<p>Сводная таблица: средние расходы по регионам и статьям:</p>
+<div id="pivot_mean">Запустите код, чтобы увидеть таблицу</div>
+<p>Сводная таблица: суммарные расходы по регионам и статьям:</p>
+<div id="pivot_sum">Запустите код, чтобы увидеть таблицу</div>
+<p>Топ-5 магазинов по общим расходам:</p>
+<div id="top_stores">Запустите код, чтобы увидеть таблицу</div>
+<p>Доля каждой статьи расходов в общих расходах:</p>
+<div id="expense_share">Запустите код, чтобы увидеть таблицу</div>
+<p>Сравнение регионов по общим расходам:</p>
+<div id="region_comparison">Запустите код, чтобы увидеть таблицу</div>
+<p>Выбросы в данных (с z-score &gt; 2):</p>
+<div id="outliers">Запустите код, чтобы увидеть таблицу</div>
+
+<h3 id="_4">Выводы по творческому заданию</h3>
+<ol>
+<li><strong>Уникальные регионы и статьи расходов</strong>: В данных представлены три региона (Татарстан, Самарская область и Пермский край) и пять статей расходов (Аренда, Закупка оборудования, Зарплата, Платежи в бюджет, Коммунальные расходы).</li>
+<li></li>
+</ol></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js"></script>
+        <script src="assets/_markdown_exec_pyodide.js"></script>
+        <script src="javascripts/mathjax.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2025-06-12 09:41:50.916607+00:00
+-->
