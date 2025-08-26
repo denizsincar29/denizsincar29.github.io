@@ -1,0 +1,49 @@
+<html lang="en">
+<head>
+    <script>
+        // Parse query parameters
+        function getQueryParams() {
+            const params = {};
+            window.location.search.substring(1).split("&").forEach(function (pair) {
+                if (!pair) return;
+                const parts = pair.split("=");
+                const key = decodeURIComponent(parts[0]);
+                const value = decodeURIComponent(parts[1] || "");
+                params[key] = value;
+            });
+            return params;
+        }
+
+        window.onload = function () {
+            const params = getQueryParams();
+            let protocol = "tt";
+            if(params.prot){
+                protocol = params.prot;
+                delete params.prot;
+            }
+            let host = params.host || ""; // Use empty string if host is undefined
+            delete params.host; // Remove host regardless of whether it exists
+
+            const paramString = Object.keys(params)
+                .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(params[key]))
+                .join("&");
+
+            let Url = protocol + ":";
+            if (host) {
+                Url += "//" + host + "?";
+            }
+            Url += (paramString ? "?" + paramString : "");
+
+
+            // Redirect
+            document.getElementById("status").innerText = "Redirecting to: " + Url;
+            window.location.href = Url;
+        };
+    </script>
+</head>
+
+<body>
+<h1>Redirecting...</h1>
+<p id="status">Redirecting</p>
+</body>
+</html>
