@@ -19,6 +19,7 @@
 
 <section>
   <button type="button" class="primary" id="btnNewTimer">Создать новый таймер</button>
+  <button type="button" id="btnImportTimer">Вставить таймер из буфера (JSON)</button>
 </section>
 
 <div class="sr-only" id="liveRegion" role="status" aria-live="polite"></div>
@@ -49,7 +50,19 @@
   <div class="actions">
     <button type="button" id="btnPause">Пауза (P)</button>
     <button type="button" id="btnAnnounce">Сказать время (T)</button>
+    <button type="button" id="btnMute">Выключить звук (M)</button>
     <button type="button" class="danger" id="btnStop">Стоп (Esc)</button>
+  </div>
+</dialog>
+
+<dialog id="importDialog" aria-labelledby="importTitle">
+  <h2 id="importTitle">Вставить JSON таймера</h2>
+  <input type="hidden" id="importMode" value="import">
+  <label for="importText">Текст JSON</label>
+  <textarea id="importText" rows="10" style="width:100%;font-family:inherit;background:#0f1014;color:var(--text);border:1px solid #2c2e37;border-radius:4px;padding:.5rem"></textarea>
+  <div class="actions">
+    <button type="button" class="primary" id="btnDoImport">Импортировать</button>
+    <button type="button" id="btnCancelImport">Закрыть</button>
   </div>
 </dialog>
 

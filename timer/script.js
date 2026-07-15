@@ -33,6 +33,10 @@ const queueStatus = document.getElementById("queueStatus");
 const clockDisplay = document.getElementById("clockDisplay");
 const runLive = document.getElementById("runLive");
 
+const importDialog = document.getElementById("importDialog");
+const importText = document.getElementById("importText");
+const importMode = document.getElementById("importMode");
+
 const previewAudio = document.getElementById("previewAudio");
 const beepEnd = document.getElementById("beepEnd");
 const beepTick = document.getElementById("beepTick");
@@ -76,11 +80,6 @@ function resolveSrc(src) {
 
 let pickerSeq = 0;
 
-/**
- * Доступный мультивыборный список звуков.
- * Пробел — выбрать/снять выбор. Shift+Пробел — прослушать/остановить.
- * Несколько выбранных = при срабатывании звук случайный (как [n] в ini автоита).
- */
 function createSoundPicker(opts) {
   pickerSeq++;
   const uid = `picker_${pickerSeq}`;
@@ -200,7 +199,7 @@ function createSoundPicker(opts) {
     } else if (e.key === "End") {
       e.preventDefault();
       moveFocus(options.length - 1);
-    } else if (e.key === " " || e.key === "Spacebar") {
+    } else if (e.code === "Space") {
       e.preventDefault();
       const opt = options[idx];
       if (e.shiftKey) {
@@ -239,9 +238,7 @@ function createSoundPicker(opts) {
         opt.setAttribute("aria-selected", "true");
         opt.classList.add("selected");
         loaded++;
-        if (loaded === files.length) {
-          announce(`Загружено файлов: ${files.length}`);
-        }
+        if (loaded === files.length) announce(`Загружено файлов: ${files.length}`);
       };
       reader.readAsDataURL(file);
     });
@@ -283,6 +280,12 @@ function renderList() {
     startBtn.textContent = `${t.name} (${t.queues.length} ${pluralQueue(t.queues.length)})`;
     startBtn.addEventListener("click", () => startTimer(idx));
 
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.textContent = "Копировать JSON";
+    copyBtn.setAttribute("aria-label", `Копировать JSON таймера ${t.name}`);
+    copyBtn.addEventListener("click", () => copyTimerJson(t));
+
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "danger";
@@ -298,6 +301,7 @@ function renderList() {
     });
 
     li.appendChild(startBtn);
+    li.appendChild(copyBtn);
     li.appendChild(delBtn);
     listEl.appendChild(li);
   });
@@ -309,6 +313,67 @@ function pluralQueue(n) {
   if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return "очереди";
   return "очередей";
 }
+
+/* ---------- экспорт / импорт JSON ---------- */
+
+async function copyTimerJson(t) {
+  const json = JSON.stringify(t, null, 2);
+  try {
+    await navigator.clipboard.writeText(json);
+    announce(`JSON таймера ${t.name} скопирован в буфер обмена`);
+  } catch {
+    importText.value = json;
+    importMode.value = "manual-copy";
+    document.getElementById("importTitle").textContent = `JSON таймера «${t.name}» — скопируйте вручную (Ctrl+C)`;
+    document.getElementById("btnDoImport").hidden = true;
+    importDialog.showModal();
+    importText.focus();
+    importText.select();
+  }
+}
+
+document.getElementById("btnImportTimer").addEventListener("click", async () => {
+  importMode.value = "import";
+  document.getElementById("importTitle").textContent = "Вставить JSON таймера";
+  document.getElementById("btnDoImport").hidden = false;
+  importText.value = "";
+  try {
+    const clip = await navigator.clipboard.readText();
+    if (clip && clip.trim().startsWith("{")) importText.value = clip;
+  } catch {
+    /* буфер недоступен — пусть вставит вручную Ctrl+V */
+  }
+  importDialog.showModal();
+  importText.focus();
+});
+
+document.getElementById("btnCancelImport").addEventListener("click", () => {
+  importDialog.close();
+});
+
+document.getElementById("btnDoImport").addEventListener("click", () => {
+  let data;
+  try {
+    data = JSON.parse(importText.value);
+  } catch {
+    announce("Не удалось разобрать JSON — проверьте текст");
+    return;
+  }
+  if (!data || typeof data.name !== "string" || !Array.isArray(data.queues)) {
+    announce("Это не похоже на JSON таймера");
+    return;
+  }
+  let name = data.name;
+  const names = new Set(timers.map((t) => t.name));
+  let suffix = 2;
+  while (names.has(name)) { name = `${data.name} (${suffix})`; suffix++; }
+  data.name = name;
+  timers.push(data);
+  saveTimers();
+  renderList();
+  importDialog.close();
+  announce(`Таймер ${name} импортирован`);
+});
 
 /* ---------- создание таймера ---------- */
 
@@ -335,6 +400,12 @@ function addQueueBlock() {
       <div>
         <label for="s_${n}">Секунды</label>
         <input type="number" id="s_${n}" min="0" max="59" value="0" required>
+      </div>
+    </div>
+    <div class="settings-row">
+      <div>
+        <label for="startdelay_${n}">Отсчёт/пауза перед началом этой очереди, секунд (0 — сразу)</label>
+        <input type="number" id="startdelay_${n}" min="0" value="0">
       </div>
     </div>
   `;
@@ -442,10 +513,11 @@ createForm.addEventListener("submit", (e) => {
     const warnLoop = document.getElementById(`warnloop_${n}`).checked;
     const announceEvery = Number(document.getElementById(`announce_${n}`).value) || 0;
     const countdownSeconds = Number(document.getElementById(`countdown_${n}`).value) || 0;
+    const startDelay = Number(document.getElementById(`startdelay_${n}`).value) || 0;
     queues.push({
       h, m, s, endSound, tickSound,
       warnSound, warnSeconds, warnLoop,
-      announceEvery, countdownSeconds,
+      announceEvery, countdownSeconds, startDelay,
     });
   }
 
@@ -465,9 +537,10 @@ let remaining = { h: 0, m: 0, s: 0 };
 let paused = false;
 let warnTriggered = false;
 let elapsedSinceQueueStart = 0;
+let phase = "idle"; // idle | precountdown | running | finished
+let preRemaining = 0;
 
 function fmt(n) { return String(n).padStart(2, "0"); }
-
 function totalSeconds(t) { return t.h * 3600 + t.m * 60 + t.s; }
 
 function updateClock() {
@@ -507,16 +580,54 @@ function beep(freq = 880, dur = 0.2) {
   osc.stop(ctx.currentTime + dur);
 }
 
+function stopAllSounds() {
+  beepEnd.pause();
+  beepTick.pause();
+  beepWarn.pause();
+  runAnnounce("Звук выключен");
+}
+
 function startTimer(idx) {
   activeTimer = timers[idx];
   queueIdx = 0;
   runTitle.textContent = activeTimer.name;
+  queueStatus.textContent = "";
   runDialog.showModal();
   startQueue();
 }
 
 function startQueue() {
   const q = activeTimer.queues[queueIdx];
+  if (q.startDelay > 0) {
+    beginPreCountdown(q.startDelay, () => beginQueueRun(q));
+  } else {
+    beginQueueRun(q);
+  }
+}
+
+function beginPreCountdown(seconds, onDone) {
+  phase = "precountdown";
+  preRemaining = seconds;
+  paused = false;
+  queueStatus.textContent = `Пауза перед очередью ${queueIdx + 1} из ${activeTimer.queues.length}`;
+  clockDisplay.textContent = String(preRemaining);
+  runAnnounce(`Начало через ${preRemaining}`);
+  if (activeInterval) clearInterval(activeInterval);
+  activeInterval = setInterval(() => {
+    if (paused) return;
+    preRemaining--;
+    if (preRemaining <= 0) {
+      clearInterval(activeInterval);
+      onDone();
+      return;
+    }
+    clockDisplay.textContent = String(preRemaining);
+    runAnnounce(String(preRemaining));
+  }, 1000);
+}
+
+function beginQueueRun(q) {
+  phase = "running";
   remaining = { h: q.h, m: q.m, s: q.s };
   paused = false;
   warnTriggered = false;
@@ -551,11 +662,9 @@ function tick() {
   if (q.announceEvery > 0 && elapsedSinceQueueStart % q.announceEvery === 0) {
     runAnnounce(`${remaining.h} часов, ${remaining.m} минут, ${remaining.s} секунд`);
   }
-
   if (q.countdownSeconds > 0 && totalRemaining <= q.countdownSeconds) {
     runAnnounce(String(totalRemaining));
   }
-
   if (!warnTriggered && q.warnSeconds > 0 && totalRemaining === q.warnSeconds) {
     warnTriggered = true;
     playWarnSound(q.warnSound, q.warnLoop);
@@ -578,46 +687,63 @@ function finishQueue() {
     runAnnounce("Очередь завершена");
     startQueue();
   } else {
-    runAnnounce("Все очереди завершены");
+    phase = "finished";
+    runAnnounce("Все очереди завершены. Нажмите Стоп или Esc, чтобы закрыть окно.");
     queueStatus.textContent = "Готово";
+    clockDisplay.textContent = "00:00:00";
   }
 }
 
 document.getElementById("btnPause").addEventListener("click", togglePause);
 function togglePause() {
+  if (phase === "finished") return;
   paused = !paused;
   if (paused) {
     beepTick.pause();
     beepWarn.pause();
     runAnnounce("Пауза");
   } else {
-    beepTick.play().catch(() => {});
-    if (warnTriggered && beepWarn.loop) beepWarn.play().catch(() => {});
+    if (phase === "running") beepTick.play().catch(() => {});
+    if (phase === "running" && warnTriggered && beepWarn.loop) beepWarn.play().catch(() => {});
     runAnnounce("Продолжено");
   }
 }
 
 document.getElementById("btnAnnounce").addEventListener("click", () => {
-  runAnnounce(`${remaining.h} часов, ${remaining.m} минут, ${remaining.s} секунд`);
+  if (phase === "precountdown") {
+    runAnnounce(`До начала: ${preRemaining}`);
+  } else {
+    runAnnounce(`${remaining.h} часов, ${remaining.m} минут, ${remaining.s} секунд`);
+  }
 });
+
+document.getElementById("btnMute").addEventListener("click", stopAllSounds);
 
 document.getElementById("btnStop").addEventListener("click", stopTimer);
 function stopTimer() {
+  if (phase === "finished") {
+    closeRunDialog();
+    return;
+  }
   if (confirm("Остановить и закрыть таймер?")) {
-    clearInterval(activeInterval);
-    beepTick.pause();
-    beepEnd.pause();
-    beepWarn.pause();
-    runDialog.close();
+    closeRunDialog();
   }
 }
 
+function closeRunDialog() {
+  clearInterval(activeInterval);
+  beepTick.pause();
+  beepEnd.pause();
+  beepWarn.pause();
+  phase = "idle";
+  runDialog.close();
+}
+
 runDialog.addEventListener("keydown", (e) => {
-  if (e.key === "p" || e.key === "P" || e.key === "з" || e.key === "З") togglePause();
-  if (e.key === "t" || e.key === "T" || e.key === "е" || e.key === "Е") {
-    runAnnounce(`${remaining.h} часов, ${remaining.m} минут, ${remaining.s} секунд`);
-  }
-  if (e.key === "Escape") {
+  if (e.code === "KeyP") togglePause();
+  if (e.code === "KeyT") document.getElementById("btnAnnounce").click();
+  if (e.code === "KeyM") stopAllSounds();
+  if (e.code === "Escape") {
     e.preventDefault();
     stopTimer();
   }
