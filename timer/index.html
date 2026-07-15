@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Таймер</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Таймер</h1>
+<p class="tagline">Несколько очередей на таймер, звук по завершении и тиканье.</p>
+
+<section aria-labelledby="list-heading">
+  <h2 id="list-heading">Сохранённые таймеры</h2>
+  <ul class="timer-list" id="timerList"></ul>
+  <p class="empty-hint" id="emptyHint" hidden>Таймеров пока нет — создайте первый.</p>
+</section>
+
+<section>
+  <button type="button" class="primary" id="btnNewTimer">Создать новый таймер</button>
+</section>
+
+<div class="sr-only" id="liveRegion" role="status" aria-live="polite"></div>
+
+<dialog id="createDialog" aria-labelledby="createTitle">
+  <form id="createForm">
+    <h2 id="createTitle">Новый таймер</h2>
+
+    <label for="timerName">Название таймера</label>
+    <input type="text" id="timerName" name="timerName" required>
+
+    <div id="queuesContainer"></div>
+
+    <div class="actions">
+      <button type="button" id="btnAddQueue">Добавить очередь</button>
+      <button type="submit" class="primary">Сохранить таймер</button>
+      <button type="button" id="btnCancelCreate">Отмена</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="runDialog" aria-labelledby="runTitle">
+  <h2 id="runTitle">—</h2>
+  <p class="queue-status" id="queueStatus"></p>
+  <p class="clock" id="clockDisplay" aria-hidden="true">00:00:00</p>
+  <div class="sr-only" id="runLive" role="status" aria-live="assertive"></div>
+
+  <div class="actions">
+    <button type="button" id="btnPause">Пауза (P)</button>
+    <button type="button" id="btnAnnounce">Сказать время (T)</button>
+    <button type="button" class="danger" id="btnStop">Стоп (Esc)</button>
+  </div>
+</dialog>
+
+<audio id="beepEnd" preload="auto"></audio>
+<audio id="beepTick" preload="auto" loop></audio>
+<audio id="previewAudio" preload="none"></audio>
+
+<script src="script.js"></script>
+</body>
+</html>
