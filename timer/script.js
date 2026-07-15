@@ -36,6 +36,7 @@ const runLive = document.getElementById("runLive");
 const previewAudio = document.getElementById("previewAudio");
 const beepEnd = document.getElementById("beepEnd");
 const beepTick = document.getElementById("beepTick");
+const beepWarn = document.getElementById("beepWarn");
 
 function loadTimers() {
   try {
@@ -65,14 +66,20 @@ function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+function resolveSrc(src) {
+  if (!src) return "";
+  if (src.startsWith("data:")) return src;
+  return new URL(src, document.baseURI).href;
+}
+
 /* ---------- доступный список выбора звука (ARIA listbox, мультивыбор) ---------- */
 
 let pickerSeq = 0;
 
 /**
- * Создаёт доступный мультивыборный список звуков.
- * Пробел — выбрать/снять выбор и прослушать. Несколько выбранных = при
- * проигрывании берётся случайный (как [n] в ini-файле автоита).
+ * Доступный мультивыборный список звуков.
+ * Пробел — выбрать/снять выбор. Shift+Пробел — прослушать/остановить.
+ * Несколько выбранных = при срабатывании звук случайный (как [n] в ini автоита).
  */
 function createSoundPicker(opts) {
   pickerSeq++;
@@ -89,7 +96,7 @@ function createSoundPicker(opts) {
 
   const hint = document.createElement("span");
   hint.className = "picker-hint";
-  hint.textContent = " (стрелки — переместиться, пробел — выбрать/снять и прослушать; несколько выбранных — при срабатывании звук случайный; Delete — удалить свой файл)";
+  hint.textContent = " (стрелки — переместиться, пробел — выбрать/снять, Shift+пробел — прослушать/остановить; несколько выбранных — при срабатывании звук случайный; Delete — удалить свой файл)";
   legend.appendChild(hint);
 
   const listbox = document.createElement("div");
@@ -134,12 +141,8 @@ function createSoundPicker(opts) {
 
   opts.sounds.forEach((s) => makeOption(s, false));
 
-  function focusableIndexes() {
-    return options.map((_, i) => i);
-  }
-
   function currentIndex() {
-    let idx = options.findIndex((o) => o.tabIndex === 0);
+    const idx = options.findIndex((o) => o.tabIndex === 0);
     return idx === -1 ? 0 : idx;
   }
 
@@ -153,12 +156,25 @@ function createSoundPicker(opts) {
     const selected = opt.getAttribute("aria-selected") === "true";
     opt.setAttribute("aria-selected", selected ? "false" : "true");
     opt.classList.toggle("selected", !selected);
+    return !selected;
   }
 
-  function playPreview(opt) {
-    if (!opt.dataset.src) return;
-    previewAudio.src = opt.dataset.src;
-    previewAudio.play().catch(() => {});
+  function togglePreview(opt) {
+    if (!opt.dataset.src) {
+      announce("У этого пункта нет звука");
+      return;
+    }
+    const target = resolveSrc(opt.dataset.src);
+    if (!previewAudio.paused && previewAudio.src === target) {
+      previewAudio.pause();
+      previewAudio.currentTime = 0;
+      announce("Прослушивание остановлено");
+    } else {
+      previewAudio.src = opt.dataset.src;
+      previewAudio.currentTime = 0;
+      previewAudio.play().catch(() => {});
+      announce(`Прослушивание: ${opt.dataset.label}`);
+    }
   }
 
   function removeOption(opt) {
@@ -166,10 +182,7 @@ function createSoundPicker(opts) {
     if (idx === -1) return;
     options.splice(idx, 1);
     opt.remove();
-    if (options.length > 0) {
-      const newIdx = Math.min(idx, options.length - 1);
-      moveFocus(newIdx);
-    }
+    if (options.length > 0) moveFocus(Math.min(idx, options.length - 1));
   }
 
   listbox.addEventListener("keydown", (e) => {
@@ -190,9 +203,12 @@ function createSoundPicker(opts) {
     } else if (e.key === " " || e.key === "Spacebar") {
       e.preventDefault();
       const opt = options[idx];
-      toggleSelect(opt);
-      playPreview(opt);
-      announce(`${opt.dataset.label}: ${opt.getAttribute("aria-selected") === "true" ? "выбран" : "снят"}`);
+      if (e.shiftKey) {
+        togglePreview(opt);
+      } else {
+        const nowSelected = toggleSelect(opt);
+        announce(`${opt.dataset.label}: ${nowSelected ? "выбран" : "снят"}`);
+      }
     } else if (e.key === "Delete" || e.key === "Backspace") {
       const opt = options[idx];
       if (opt.dataset.custom === "true") {
@@ -208,8 +224,8 @@ function createSoundPicker(opts) {
     const opt = e.target.closest('[role="option"]');
     if (!opt) return;
     moveFocus(options.indexOf(opt));
-    toggleSelect(opt);
-    playPreview(opt);
+    const nowSelected = toggleSelect(opt);
+    announce(`${opt.dataset.label}: ${nowSelected ? "выбран" : "снят"}`);
   });
 
   fileInput.addEventListener("change", () => {
@@ -243,9 +259,7 @@ function createSoundPicker(opts) {
       if (!Array.isArray(list)) return;
       list.forEach((v) => {
         let opt = options.find((o) => o.dataset.src === v.src);
-        if (!opt && v.type === "custom") {
-          opt = makeOption(v, true);
-        }
+        if (!opt && v.type === "custom") opt = makeOption(v, true);
         if (opt) {
           opt.setAttribute("aria-selected", "true");
           opt.classList.add("selected");
@@ -299,7 +313,7 @@ function pluralQueue(n) {
 /* ---------- создание таймера ---------- */
 
 let queueCount = 0;
-const queuePickers = new Map(); // queueIndex -> {end, tick}
+const queuePickers = new Map(); // queueIndex -> {end, tick, warn}
 
 function addQueueBlock() {
   queueCount++;
@@ -333,8 +347,41 @@ function addQueueBlock() {
     legend: "Звук тиканья (ничего не выбрано — тишина)",
     sounds: CLOCK_SOUNDS,
   });
+  const warnPicker = createSoundPicker({
+    legend: "Звук предупреждения перед концом (ничего не выбрано — выключено)",
+    sounds: ALARM_SOUNDS,
+  });
   block.appendChild(endPicker.el);
   block.appendChild(tickPicker.el);
+  block.appendChild(warnPicker.el);
+
+  const warnBlock = document.createElement("div");
+  warnBlock.className = "settings-row";
+  warnBlock.innerHTML = `
+    <div>
+      <label for="warnsec_${n}">За сколько секунд до конца сработает предупреждение</label>
+      <input type="number" id="warnsec_${n}" min="0" value="0">
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="warnloop_${n}">
+      <label for="warnloop_${n}">Зациклить предупреждение (играть до конца очереди)</label>
+    </div>
+  `;
+  block.appendChild(warnBlock);
+
+  const srBlock = document.createElement("div");
+  srBlock.className = "settings-row";
+  srBlock.innerHTML = `
+    <div>
+      <label for="announce_${n}">Скринридер озвучивает время каждые … секунд (0 — выключено)</label>
+      <input type="number" id="announce_${n}" min="0" value="0">
+    </div>
+    <div>
+      <label for="countdown_${n}">Считать вслух последние … секунд (0 — выключено)</label>
+      <input type="number" id="countdown_${n}" min="0" value="0">
+    </div>
+  `;
+  block.appendChild(srBlock);
 
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
@@ -346,7 +393,7 @@ function addQueueBlock() {
   });
   block.appendChild(removeBtn);
 
-  queuePickers.set(n, { end: endPicker, tick: tickPicker });
+  queuePickers.set(n, { end: endPicker, tick: tickPicker, warn: warnPicker });
   queuesContainer.appendChild(block);
 }
 
@@ -390,7 +437,16 @@ createForm.addEventListener("submit", (e) => {
     const pickers = queuePickers.get(n);
     const endSound = pickers.end.getValue();
     const tickSound = pickers.tick.getValue();
-    queues.push({ h, m, s, endSound, tickSound });
+    const warnSound = pickers.warn.getValue();
+    const warnSeconds = Number(document.getElementById(`warnsec_${n}`).value) || 0;
+    const warnLoop = document.getElementById(`warnloop_${n}`).checked;
+    const announceEvery = Number(document.getElementById(`announce_${n}`).value) || 0;
+    const countdownSeconds = Number(document.getElementById(`countdown_${n}`).value) || 0;
+    queues.push({
+      h, m, s, endSound, tickSound,
+      warnSound, warnSeconds, warnLoop,
+      announceEvery, countdownSeconds,
+    });
   }
 
   timers.push({ name, queues });
@@ -407,8 +463,12 @@ let activeTimer = null;
 let queueIdx = 0;
 let remaining = { h: 0, m: 0, s: 0 };
 let paused = false;
+let warnTriggered = false;
+let elapsedSinceQueueStart = 0;
 
 function fmt(n) { return String(n).padStart(2, "0"); }
+
+function totalSeconds(t) { return t.h * 3600 + t.m * 60 + t.s; }
 
 function updateClock() {
   clockDisplay.textContent = `${fmt(remaining.h)}:${fmt(remaining.m)}:${fmt(remaining.s)}`;
@@ -421,6 +481,16 @@ function playSound(el, soundList) {
     el.play().catch(() => {});
   } else {
     el.pause();
+  }
+}
+
+function playWarnSound(soundList, loop) {
+  const chosen = pickRandom(soundList);
+  if (chosen && chosen.src) {
+    beepWarn.loop = loop;
+    beepWarn.src = chosen.src;
+    beepWarn.currentTime = 0;
+    beepWarn.play().catch(() => {});
   }
 }
 
@@ -449,9 +519,13 @@ function startQueue() {
   const q = activeTimer.queues[queueIdx];
   remaining = { h: q.h, m: q.m, s: q.s };
   paused = false;
+  warnTriggered = false;
+  elapsedSinceQueueStart = 0;
   updateClock();
   queueStatus.textContent = `Очередь ${queueIdx + 1} из ${activeTimer.queues.length}`;
   runAnnounce(`Начата очередь ${queueIdx + 1} из ${activeTimer.queues.length}`);
+  beepWarn.pause();
+  beepWarn.loop = false;
   playSound(beepTick, q.tickSound);
   if (activeInterval) clearInterval(activeInterval);
   activeInterval = setInterval(tick, 1000);
@@ -459,22 +533,39 @@ function startQueue() {
 
 function tick() {
   if (paused) return;
+  if (totalSeconds(remaining) <= 0) { finishQueue(); return; }
+
   if (remaining.s > 0) {
     remaining.s--;
   } else if (remaining.m > 0) {
     remaining.m--; remaining.s = 59;
   } else if (remaining.h > 0) {
     remaining.h--; remaining.m = 59; remaining.s = 59;
-  } else {
-    finishQueue();
-    return;
   }
+  elapsedSinceQueueStart++;
   updateClock();
+
+  const q = activeTimer.queues[queueIdx];
+  const totalRemaining = totalSeconds(remaining);
+
+  if (q.announceEvery > 0 && elapsedSinceQueueStart % q.announceEvery === 0) {
+    runAnnounce(`${remaining.h} часов, ${remaining.m} минут, ${remaining.s} секунд`);
+  }
+
+  if (q.countdownSeconds > 0 && totalRemaining <= q.countdownSeconds) {
+    runAnnounce(String(totalRemaining));
+  }
+
+  if (!warnTriggered && q.warnSeconds > 0 && totalRemaining === q.warnSeconds) {
+    warnTriggered = true;
+    playWarnSound(q.warnSound, q.warnLoop);
+  }
 }
 
 function finishQueue() {
   clearInterval(activeInterval);
   beepTick.pause();
+  beepWarn.pause();
   const q = activeTimer.queues[queueIdx];
   const chosen = pickRandom(q.endSound);
   if (chosen && chosen.src) {
@@ -495,8 +586,15 @@ function finishQueue() {
 document.getElementById("btnPause").addEventListener("click", togglePause);
 function togglePause() {
   paused = !paused;
-  if (paused) { beepTick.pause(); runAnnounce("Пауза"); }
-  else { beepTick.play().catch(() => {}); runAnnounce("Продолжено"); }
+  if (paused) {
+    beepTick.pause();
+    beepWarn.pause();
+    runAnnounce("Пауза");
+  } else {
+    beepTick.play().catch(() => {});
+    if (warnTriggered && beepWarn.loop) beepWarn.play().catch(() => {});
+    runAnnounce("Продолжено");
+  }
 }
 
 document.getElementById("btnAnnounce").addEventListener("click", () => {
@@ -509,6 +607,7 @@ function stopTimer() {
     clearInterval(activeInterval);
     beepTick.pause();
     beepEnd.pause();
+    beepWarn.pause();
     runDialog.close();
   }
 }

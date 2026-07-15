@@ -76,6 +76,10 @@
   .listbox .option.selected{background:var(--accent);color:#1a1204;font-weight:bold}
   .listbox .option:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
   .add-file-btn{margin-top:.4rem;font-size:.85rem;padding:.4rem .7rem}
+  .settings-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-block:.8rem;align-items:end}
+  .checkbox-row{display:flex;align-items:center;gap:.5rem}
+  .checkbox-row input[type="checkbox"]{width:auto}
+  .checkbox-row label{margin:0}
   dialog{
     background:var(--panel);
     color:var(--text);
