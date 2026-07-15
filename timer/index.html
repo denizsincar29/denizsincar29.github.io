@@ -46,18 +46,31 @@
   <p class="queue-status" id="queueStatus"></p>
   <p class="clock" id="clockDisplay" aria-hidden="true">00:00:00</p>
   <div class="sr-only" id="runLive" role="status" aria-live="assertive"></div>
+  <div class="sr-only" id="brailleStatus" tabindex="-1" role="status" aria-live="off"></div>
 
   <div class="actions">
+    <button type="button" id="btnUrlStart" class="primary" hidden>▶ Начать</button>
+    <button type="button" id="btnSaveActive" hidden>Сохранить этот таймер локально</button>
     <button type="button" id="btnPause">Пауза (P)</button>
     <button type="button" id="btnAnnounce">Сказать время (T)</button>
     <button type="button" id="btnMute">Выключить звук (M)</button>
     <button type="button" class="danger" id="btnStop">Стоп (Esc)</button>
   </div>
+  <p class="picker-hint">B — перейти к строке статуса (для брайлевского дисплея)</p>
+</dialog>
+
+<dialog id="stopDialog" aria-labelledby="stopTitle">
+  <h2 id="stopTitle">Остановить таймер?</h2>
+  <div class="actions">
+    <button type="button" class="danger" id="btnStopOnly">Остановить</button>
+    <button type="button" id="btnStopSaveState">Остановить и сохранить состояние</button>
+    <button type="button" id="btnStopCopyState">Остановить и скопировать ссылку с состоянием</button>
+    <button type="button" id="btnStopCancel">Отмена</button>
+  </div>
 </dialog>
 
 <dialog id="importDialog" aria-labelledby="importTitle">
   <h2 id="importTitle">Вставить JSON таймера</h2>
-  <input type="hidden" id="importMode" value="import">
   <label for="importText">Текст JSON</label>
   <textarea id="importText" rows="10" style="width:100%;font-family:inherit;background:#0f1014;color:var(--text);border:1px solid #2c2e37;border-radius:4px;padding:.5rem"></textarea>
   <div class="actions">

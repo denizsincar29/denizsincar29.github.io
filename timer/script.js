@@ -1,18 +1,24 @@
 "use strict";
 
-/* ---------- библиотека встроенных звуков ---------- */
+/* ---------- библиотека встроенных звуков (id — для данных, label — только для UI) ---------- */
 
 const ALARM_SOUNDS = Array.from({ length: 17 }, (_, i) => ({
   type: "builtin",
+  id: `alarm${i + 1}`,
   src: `sounds/alarm${i + 1}.ogg`,
   label: `Сигнал ${i + 1}`,
 }));
 
 const CLOCK_SOUNDS = Array.from({ length: 7 }, (_, i) => ({
   type: "builtin",
+  id: `clock${i + 1}`,
   src: `sounds/clock${i + 1}.ogg`,
   label: `Тиканье ${i + 1}`,
 }));
+
+const BUILTIN_BY_ID = new Map(
+  [...ALARM_SOUNDS, ...CLOCK_SOUNDS].map((s) => [s.id, s])
+);
 
 const STORAGE_KEY = "timers_v1";
 
@@ -32,10 +38,14 @@ const runTitle = document.getElementById("runTitle");
 const queueStatus = document.getElementById("queueStatus");
 const clockDisplay = document.getElementById("clockDisplay");
 const runLive = document.getElementById("runLive");
+const brailleStatus = document.getElementById("brailleStatus");
+const btnSaveActive = document.getElementById("btnSaveActive");
+const btnUrlStart = document.getElementById("btnUrlStart");
+
+const stopDialog = document.getElementById("stopDialog");
 
 const importDialog = document.getElementById("importDialog");
 const importText = document.getElementById("importText");
-const importMode = document.getElementById("importMode");
 
 const previewAudio = document.getElementById("previewAudio");
 const beepEnd = document.getElementById("beepEnd");
@@ -65,6 +75,12 @@ function runAnnounce(text) {
   requestAnimationFrame(() => { runLive.textContent = text; });
 }
 
+function updateBraille() {
+  if (brailleStatus) {
+    brailleStatus.textContent = `${queueStatus.textContent} ${clockDisplay.textContent}`.trim();
+  }
+}
+
 function pickRandom(list) {
   if (!list || list.length === 0) return null;
   return list[Math.floor(Math.random() * list.length)];
@@ -74,6 +90,115 @@ function resolveSrc(src) {
   if (!src) return "";
   if (src.startsWith("data:")) return src;
   return new URL(src, document.baseURI).href;
+}
+
+/* ---------- base64 (url-safe) для ?json= ---------- */
+
+function b64encode(obj) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64decode(str) {
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  return JSON.parse(decodeURIComponent(escape(atob(str))));
+}
+
+/* ---------- компактный ?name=&q1time=... (только встроенные звуки) ---------- */
+
+function pad(n) { return String(n).padStart(2, "0"); }
+function timeStr(q) { return `${pad(q.h)}:${pad(q.m)}:${pad(q.s)}`; }
+function idsStr(list) { return (list || []).map((s) => s.id).join(","); }
+
+function hasCustomSound(t) {
+  return t.queues.some((q) =>
+    [q.endSound, q.tickSound, q.warnSound].some((list) =>
+      (list || []).some((s) => s.type === "custom")
+    )
+  );
+}
+
+function buildCompactParams(t) {
+  const p = new URLSearchParams();
+  p.set("name", t.name);
+  t.queues.forEach((q, i) => {
+    const n = i + 1;
+    p.set(`q${n}time`, timeStr(q));
+    if (q.endSound && q.endSound.length) p.set(`q${n}end`, idsStr(q.endSound));
+    if (q.tickSound && q.tickSound.length) p.set(`q${n}tick`, idsStr(q.tickSound));
+    if (q.warnSound && q.warnSound.length) p.set(`q${n}warn`, idsStr(q.warnSound));
+    if (q.warnSeconds) p.set(`q${n}warnsec`, q.warnSeconds);
+    if (q.warnLoop) p.set(`q${n}warnloop`, "1");
+    if (q.announceEvery) p.set(`q${n}announce`, q.announceEvery);
+    if (q.countdownSeconds) p.set(`q${n}countdown`, q.countdownSeconds);
+    if (q.startDelay) p.set(`q${n}delay`, q.startDelay);
+  });
+  return p;
+}
+
+function parseCompactParams(params) {
+  const name = params.get("name");
+  if (!name) return null;
+  const idsToEntries = (str) =>
+    str
+      ? str.split(",").filter(Boolean).map((id) => {
+          const b = BUILTIN_BY_ID.get(id);
+          return b ? { type: "builtin", id, src: b.src } : null;
+        }).filter(Boolean)
+      : [];
+  const queues = [];
+  for (let n = 1; ; n++) {
+    const t = params.get(`q${n}time`);
+    if (!t) break;
+    const [h, m, s] = t.split(":").map(Number);
+    queues.push({
+      h: h || 0, m: m || 0, s: s || 0,
+      endSound: idsToEntries(params.get(`q${n}end`)),
+      tickSound: idsToEntries(params.get(`q${n}tick`)),
+      warnSound: idsToEntries(params.get(`q${n}warn`)),
+      warnSeconds: Number(params.get(`q${n}warnsec`)) || 0,
+      warnLoop: params.get(`q${n}warnloop`) === "1",
+      announceEvery: Number(params.get(`q${n}announce`)) || 0,
+      countdownSeconds: Number(params.get(`q${n}countdown`)) || 0,
+      startDelay: Number(params.get(`q${n}delay`)) || 0,
+    });
+  }
+  if (queues.length === 0) return null;
+  return { name, queues };
+}
+
+function buildShareUrl(t, { state = null, autostart = false, forceJson = false } = {}) {
+  const base = location.origin + location.pathname;
+  let url;
+  if (forceJson || state || hasCustomSound(t)) {
+    const payload = state ? { ...t, state } : t;
+    url = `${base}?json=${b64encode(payload)}`;
+  } else {
+    url = `${base}?${buildCompactParams(t).toString()}`;
+  }
+  if (autostart) url += "&autostart=true";
+  return url;
+}
+
+/* ---------- копирование в буфер с запасным вариантом ---------- */
+
+async function copyText(text, dialogTitle) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    openManualCopyDialog(text, dialogTitle);
+    return false;
+  }
+}
+
+function openManualCopyDialog(text, title) {
+  importText.value = text;
+  document.getElementById("importTitle").textContent = title || "Скопируйте вручную (Ctrl+C)";
+  document.getElementById("btnDoImport").hidden = true;
+  importDialog.showModal();
+  importText.focus();
+  importText.select();
 }
 
 /* ---------- доступный список выбора звука (ARIA listbox, мультивыбор) ---------- */
@@ -129,6 +254,7 @@ function createSoundPicker(opts) {
     opt.tabIndex = options.length === 0 ? 0 : -1;
     opt.dataset.type = entry.type;
     opt.dataset.custom = custom ? "true" : "false";
+    opt.dataset.id = entry.id;
     if (entry.src) opt.dataset.src = entry.src;
     opt.dataset.label = entry.label;
     opt.textContent = entry.label;
@@ -234,7 +360,7 @@ function createSoundPicker(opts) {
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const opt = makeOption({ type: "custom", src: reader.result, label: file.name }, true);
+        const opt = makeOption({ type: "custom", id: file.name, src: reader.result, label: file.name }, true);
         opt.setAttribute("aria-selected", "true");
         opt.classList.add("selected");
         loaded++;
@@ -250,18 +376,7 @@ function createSoundPicker(opts) {
     getValue() {
       return options
         .filter((o) => o.getAttribute("aria-selected") === "true")
-        .map((o) => ({ type: o.dataset.type, src: o.dataset.src, label: o.dataset.label }));
-    },
-    setValue(list) {
-      if (!Array.isArray(list)) return;
-      list.forEach((v) => {
-        let opt = options.find((o) => o.dataset.src === v.src);
-        if (!opt && v.type === "custom") opt = makeOption(v, true);
-        if (opt) {
-          opt.setAttribute("aria-selected", "true");
-          opt.classList.add("selected");
-        }
-      });
+        .map((o) => ({ type: o.dataset.type, id: o.dataset.id, src: o.dataset.src }));
     },
   };
 }
@@ -277,8 +392,15 @@ function renderList() {
     const startBtn = document.createElement("button");
     startBtn.type = "button";
     startBtn.className = "select-timer";
-    startBtn.textContent = `${t.name} (${t.queues.length} ${pluralQueue(t.queues.length)})`;
+    const resumeTag = t.savedState ? " — есть сохранённое состояние" : "";
+    startBtn.textContent = `${t.name} (${t.queues.length} ${pluralQueue(t.queues.length)})${resumeTag}`;
     startBtn.addEventListener("click", () => startTimer(idx));
+
+    const copyUrlBtn = document.createElement("button");
+    copyUrlBtn.type = "button";
+    copyUrlBtn.textContent = "Копировать ссылку";
+    copyUrlBtn.setAttribute("aria-label", `Копировать ссылку на таймер ${t.name}`);
+    copyUrlBtn.addEventListener("click", () => copyTimerUrl(t));
 
     const copyBtn = document.createElement("button");
     copyBtn.type = "button";
@@ -301,6 +423,7 @@ function renderList() {
     });
 
     li.appendChild(startBtn);
+    li.appendChild(copyUrlBtn);
     li.appendChild(copyBtn);
     li.appendChild(delBtn);
     listEl.appendChild(li);
@@ -314,26 +437,21 @@ function pluralQueue(n) {
   return "очередей";
 }
 
-/* ---------- экспорт / импорт JSON ---------- */
+/* ---------- экспорт / импорт ---------- */
 
 async function copyTimerJson(t) {
   const json = JSON.stringify(t, null, 2);
-  try {
-    await navigator.clipboard.writeText(json);
-    announce(`JSON таймера ${t.name} скопирован в буфер обмена`);
-  } catch {
-    importText.value = json;
-    importMode.value = "manual-copy";
-    document.getElementById("importTitle").textContent = `JSON таймера «${t.name}» — скопируйте вручную (Ctrl+C)`;
-    document.getElementById("btnDoImport").hidden = true;
-    importDialog.showModal();
-    importText.focus();
-    importText.select();
-  }
+  const ok = await copyText(json, `JSON таймера «${t.name}» — скопируйте вручную (Ctrl+C)`);
+  if (ok) announce(`JSON таймера ${t.name} скопирован в буфер обмена`);
+}
+
+async function copyTimerUrl(t) {
+  const url = buildShareUrl(t);
+  const ok = await copyText(url, `Ссылка на таймер «${t.name}» — скопируйте вручную (Ctrl+C)`);
+  if (ok) announce(`Ссылка на таймер ${t.name} скопирована`);
 }
 
 document.getElementById("btnImportTimer").addEventListener("click", async () => {
-  importMode.value = "import";
   document.getElementById("importTitle").textContent = "Вставить JSON таймера";
   document.getElementById("btnDoImport").hidden = false;
   importText.value = "";
@@ -341,15 +459,13 @@ document.getElementById("btnImportTimer").addEventListener("click", async () => 
     const clip = await navigator.clipboard.readText();
     if (clip && clip.trim().startsWith("{")) importText.value = clip;
   } catch {
-    /* буфер недоступен — пусть вставит вручную Ctrl+V */
+    /* буфер недоступен — вставит вручную Ctrl+V */
   }
   importDialog.showModal();
   importText.focus();
 });
 
-document.getElementById("btnCancelImport").addEventListener("click", () => {
-  importDialog.close();
-});
+document.getElementById("btnCancelImport").addEventListener("click", () => importDialog.close());
 
 document.getElementById("btnDoImport").addEventListener("click", () => {
   let data;
@@ -363,6 +479,11 @@ document.getElementById("btnDoImport").addEventListener("click", () => {
     announce("Это не похоже на JSON таймера");
     return;
   }
+  addTimerDedupName(data);
+  importDialog.close();
+});
+
+function addTimerDedupName(data) {
   let name = data.name;
   const names = new Set(timers.map((t) => t.name));
   let suffix = 2;
@@ -371,14 +492,13 @@ document.getElementById("btnDoImport").addEventListener("click", () => {
   timers.push(data);
   saveTimers();
   renderList();
-  importDialog.close();
   announce(`Таймер ${name} импортирован`);
-});
+}
 
 /* ---------- создание таймера ---------- */
 
 let queueCount = 0;
-const queuePickers = new Map(); // queueIndex -> {end, tick, warn}
+const queuePickers = new Map();
 
 function addQueueBlock() {
   queueCount++;
@@ -480,9 +600,7 @@ document.getElementById("btnNewTimer").addEventListener("click", () => {
   timerNameInput.focus();
 });
 
-document.getElementById("btnCancelCreate").addEventListener("click", () => {
-  createDialog.close();
-});
+document.getElementById("btnCancelCreate").addEventListener("click", () => createDialog.close());
 
 createForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -506,18 +624,16 @@ createForm.addEventListener("submit", (e) => {
       return;
     }
     const pickers = queuePickers.get(n);
-    const endSound = pickers.end.getValue();
-    const tickSound = pickers.tick.getValue();
-    const warnSound = pickers.warn.getValue();
-    const warnSeconds = Number(document.getElementById(`warnsec_${n}`).value) || 0;
-    const warnLoop = document.getElementById(`warnloop_${n}`).checked;
-    const announceEvery = Number(document.getElementById(`announce_${n}`).value) || 0;
-    const countdownSeconds = Number(document.getElementById(`countdown_${n}`).value) || 0;
-    const startDelay = Number(document.getElementById(`startdelay_${n}`).value) || 0;
     queues.push({
-      h, m, s, endSound, tickSound,
-      warnSound, warnSeconds, warnLoop,
-      announceEvery, countdownSeconds, startDelay,
+      h, m, s,
+      endSound: pickers.end.getValue(),
+      tickSound: pickers.tick.getValue(),
+      warnSound: pickers.warn.getValue(),
+      warnSeconds: Number(document.getElementById(`warnsec_${n}`).value) || 0,
+      warnLoop: document.getElementById(`warnloop_${n}`).checked,
+      announceEvery: Number(document.getElementById(`announce_${n}`).value) || 0,
+      countdownSeconds: Number(document.getElementById(`countdown_${n}`).value) || 0,
+      startDelay: Number(document.getElementById(`startdelay_${n}`).value) || 0,
     });
   }
 
@@ -532,19 +648,20 @@ createForm.addEventListener("submit", (e) => {
 
 let activeInterval = null;
 let activeTimer = null;
+let activeTimerSaved = true;
 let queueIdx = 0;
 let remaining = { h: 0, m: 0, s: 0 };
 let paused = false;
 let warnTriggered = false;
 let elapsedSinceQueueStart = 0;
 let phase = "idle"; // idle | precountdown | running | finished
-let preRemaining = 0;
 
 function fmt(n) { return String(n).padStart(2, "0"); }
 function totalSeconds(t) { return t.h * 3600 + t.m * 60 + t.s; }
 
 function updateClock() {
   clockDisplay.textContent = `${fmt(remaining.h)}:${fmt(remaining.m)}:${fmt(remaining.s)}`;
+  updateBraille();
 }
 
 function playSound(el, soundList) {
@@ -589,11 +706,25 @@ function stopAllSounds() {
 
 function startTimer(idx) {
   activeTimer = timers[idx];
-  queueIdx = 0;
+  activeTimerSaved = true;
+  btnSaveActive.hidden = true;
+  btnUrlStart.hidden = true;
   runTitle.textContent = activeTimer.name;
   queueStatus.textContent = "";
   runDialog.showModal();
-  startQueue();
+
+  if (activeTimer.savedState) {
+    queueIdx = activeTimer.savedState.queueIdx;
+    const overrideRemaining = activeTimer.savedState.remaining;
+    delete activeTimer.savedState;
+    saveTimers();
+    renderList();
+    beginQueueRun(activeTimer.queues[queueIdx], overrideRemaining);
+    runAnnounce(`Продолжаем с сохранённого состояния: очередь ${queueIdx + 1}`);
+  } else {
+    queueIdx = 0;
+    startQueue();
+  }
 }
 
 function startQueue() {
@@ -607,10 +738,11 @@ function startQueue() {
 
 function beginPreCountdown(seconds, onDone) {
   phase = "precountdown";
-  preRemaining = seconds;
+  let preRemaining = seconds;
   paused = false;
   queueStatus.textContent = `Пауза перед очередью ${queueIdx + 1} из ${activeTimer.queues.length}`;
   clockDisplay.textContent = String(preRemaining);
+  updateBraille();
   runAnnounce(`Начало через ${preRemaining}`);
   if (activeInterval) clearInterval(activeInterval);
   activeInterval = setInterval(() => {
@@ -622,18 +754,20 @@ function beginPreCountdown(seconds, onDone) {
       return;
     }
     clockDisplay.textContent = String(preRemaining);
+    updateBraille();
     runAnnounce(String(preRemaining));
   }, 1000);
 }
 
-function beginQueueRun(q) {
+function beginQueueRun(q, overrideRemaining) {
   phase = "running";
-  remaining = { h: q.h, m: q.m, s: q.s };
+  remaining = overrideRemaining || { h: q.h, m: q.m, s: q.s };
   paused = false;
   warnTriggered = false;
   elapsedSinceQueueStart = 0;
   updateClock();
   queueStatus.textContent = `Очередь ${queueIdx + 1} из ${activeTimer.queues.length}`;
+  updateBraille();
   runAnnounce(`Начата очередь ${queueIdx + 1} из ${activeTimer.queues.length}`);
   beepWarn.pause();
   beepWarn.loop = false;
@@ -691,6 +825,7 @@ function finishQueue() {
     runAnnounce("Все очереди завершены. Нажмите Стоп или Esc, чтобы закрыть окно.");
     queueStatus.textContent = "Готово";
     clockDisplay.textContent = "00:00:00";
+    updateBraille();
   }
 }
 
@@ -710,25 +845,53 @@ function togglePause() {
 }
 
 document.getElementById("btnAnnounce").addEventListener("click", () => {
-  if (phase === "precountdown") {
-    runAnnounce(`До начала: ${preRemaining}`);
-  } else {
-    runAnnounce(`${remaining.h} часов, ${remaining.m} минут, ${remaining.s} секунд`);
-  }
+  runAnnounce(`${remaining.h} часов, ${remaining.m} минут, ${remaining.s} секунд`);
 });
 
 document.getElementById("btnMute").addEventListener("click", stopAllSounds);
 
+/* ---------- диалог остановки: обычный стоп / сохранить состояние / скопировать состояние ---------- */
+
 document.getElementById("btnStop").addEventListener("click", stopTimer);
 function stopTimer() {
-  if (phase === "finished") {
+  if (phase === "finished" || phase === "idle") {
     closeRunDialog();
     return;
   }
-  if (confirm("Остановить и закрыть таймер?")) {
-    closeRunDialog();
-  }
+  stopDialog.showModal();
 }
+
+function currentStateSnapshot() {
+  return { queueIdx, remaining: { ...remaining } };
+}
+
+document.getElementById("btnStopOnly").addEventListener("click", () => {
+  stopDialog.close();
+  closeRunDialog();
+});
+
+document.getElementById("btnStopCancel").addEventListener("click", () => stopDialog.close());
+
+document.getElementById("btnStopSaveState").addEventListener("click", () => {
+  const snap = currentStateSnapshot();
+  const idx = timers.indexOf(activeTimer);
+  const entry = { name: activeTimer.name, queues: activeTimer.queues, savedState: snap };
+  if (idx !== -1) timers[idx] = entry;
+  else timers.push(entry);
+  saveTimers();
+  renderList();
+  announce(`Состояние таймера ${activeTimer.name} сохранено`);
+  stopDialog.close();
+  closeRunDialog();
+});
+
+document.getElementById("btnStopCopyState").addEventListener("click", async () => {
+  const url = buildShareUrl(activeTimer, { state: currentStateSnapshot(), forceJson: true });
+  const ok = await copyText(url, "Ссылка с состоянием — скопируйте вручную (Ctrl+C)");
+  stopDialog.close();
+  closeRunDialog();
+  if (ok) announce("Ссылка с состоянием скопирована");
+});
 
 function closeRunDialog() {
   clearInterval(activeInterval);
@@ -739,14 +902,90 @@ function closeRunDialog() {
   runDialog.close();
 }
 
+btnSaveActive.addEventListener("click", () => {
+  if (!activeTimer) return;
+  timers.push(activeTimer);
+  saveTimers();
+  renderList();
+  activeTimerSaved = true;
+  btnSaveActive.hidden = true;
+  announce(`Таймер ${activeTimer.name} сохранён локально`);
+});
+
 runDialog.addEventListener("keydown", (e) => {
   if (e.code === "KeyP") togglePause();
   if (e.code === "KeyT") document.getElementById("btnAnnounce").click();
   if (e.code === "KeyM") stopAllSounds();
+  if (e.code === "KeyB") {
+    e.preventDefault();
+    brailleStatus.focus();
+  }
   if (e.code === "Escape") {
     e.preventDefault();
     stopTimer();
   }
 });
 
+/* ---------- загрузка из URL: ?json=... или ?name=&q1time=... , &autostart=true ---------- */
+
+function canAutoplayAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const state = ctx.state;
+    ctx.close();
+    return state === "running";
+  } catch {
+    return false;
+  }
+}
+
+function initFromUrl() {
+  const params = new URLSearchParams(location.search);
+  let incoming = null;
+  if (params.has("json")) {
+    try { incoming = b64decode(params.get("json")); } catch { announce("Не удалось прочитать таймер из ссылки"); }
+  } else if (params.has("name") && params.has("q1time")) {
+    incoming = parseCompactParams(params);
+  }
+  if (!incoming) return;
+
+  const state = incoming.state || null;
+  activeTimer = { name: incoming.name, queues: incoming.queues };
+  activeTimerSaved = false;
+  queueIdx = state ? state.queueIdx : 0;
+
+  runTitle.textContent = activeTimer.name;
+  queueStatus.textContent = "";
+  btnSaveActive.hidden = false;
+  runDialog.showModal();
+
+  const autostart = params.get("autostart") === "true";
+  const begin = () => {
+    if (state) {
+      beginQueueRun(activeTimer.queues[queueIdx], state.remaining);
+      runAnnounce(`Восстановлено состояние: очередь ${queueIdx + 1}, осталось ${state.remaining.h} ч ${state.remaining.m} мин ${state.remaining.s} сек`);
+    } else {
+      startQueue();
+    }
+  };
+
+  if (autostart && canAutoplayAudio()) {
+    begin();
+  } else {
+    btnUrlStart.hidden = false;
+    btnUrlStart.focus();
+    btnUrlStart.onclick = () => {
+      btnUrlStart.hidden = true;
+      begin();
+    };
+    if (!autostart) {
+      runAnnounce("Таймер загружен из ссылки. Нажмите «Начать».");
+    } else {
+      runAnnounce("Звук может быть заблокирован браузером. Нажмите «Начать», чтобы запустить таймер.");
+    }
+  }
+}
+
 renderList();
+initFromUrl();
