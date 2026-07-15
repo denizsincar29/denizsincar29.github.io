@@ -60,14 +60,19 @@ function runAnnounce(text) {
   requestAnimationFrame(() => { runLive.textContent = text; });
 }
 
-/* ---------- доступный список выбора звука (ARIA listbox) ---------- */
+function pickRandom(list) {
+  if (!list || list.length === 0) return null;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+/* ---------- доступный список выбора звука (ARIA listbox, мультивыбор) ---------- */
 
 let pickerSeq = 0;
 
 /**
- * Создаёт доступный список выбора звука.
- * @param {{legend:string, sounds:{type:string,src:string,label:string}[], allowNone:boolean, noneLabel:string}} opts
- * @returns {{el:HTMLElement, getValue:()=>{type:string,src:string|null,label:string}, setValue:(v:any)=>void}}
+ * Создаёт доступный мультивыборный список звуков.
+ * Пробел — выбрать/снять выбор и прослушать. Несколько выбранных = при
+ * проигрывании берётся случайный (как [n] в ini-файле автоита).
  */
 function createSoundPicker(opts) {
   pickerSeq++;
@@ -84,93 +89,117 @@ function createSoundPicker(opts) {
 
   const hint = document.createElement("span");
   hint.className = "picker-hint";
-  hint.textContent = " (стрелки — выбрать, пробел — прослушать)";
+  hint.textContent = " (стрелки — переместиться, пробел — выбрать/снять и прослушать; несколько выбранных — при срабатывании звук случайный; Delete — удалить свой файл)";
   legend.appendChild(hint);
 
   const listbox = document.createElement("div");
   listbox.className = "listbox";
   listbox.setAttribute("role", "listbox");
+  listbox.setAttribute("aria-multiselectable", "true");
   listbox.setAttribute("aria-labelledby", legend.id);
   wrapper.appendChild(listbox);
+
+  const addFileBtn = document.createElement("button");
+  addFileBtn.type = "button";
+  addFileBtn.className = "add-file-btn";
+  addFileBtn.textContent = "Добавить свой файл (можно несколько)";
+  wrapper.appendChild(addFileBtn);
 
   const fileInput = document.createElement("input");
   fileInput.type = "file";
   fileInput.accept = "audio/*";
+  fileInput.multiple = true;
   fileInput.hidden = true;
-  fileInput.className = "custom-file-input";
   wrapper.appendChild(fileInput);
 
-  const options = [];
-  const entries = [];
-  if (opts.allowNone) {
-    entries.push({ type: "none", src: null, label: opts.noneLabel || "Без звука" });
-  }
-  opts.sounds.forEach((s) => entries.push(s));
-  entries.push({ type: "custom", src: null, label: "Свой файл… (Enter — выбрать)" });
+  addFileBtn.addEventListener("click", () => fileInput.click());
 
-  entries.forEach((entry, i) => {
+  const options = [];
+
+  function makeOption(entry, custom) {
     const opt = document.createElement("div");
     opt.setAttribute("role", "option");
     opt.className = "option";
-    opt.tabIndex = i === 0 ? 0 : -1;
+    opt.tabIndex = options.length === 0 ? 0 : -1;
     opt.dataset.type = entry.type;
+    opt.dataset.custom = custom ? "true" : "false";
     if (entry.src) opt.dataset.src = entry.src;
     opt.dataset.label = entry.label;
     opt.textContent = entry.label;
-    opt.setAttribute("aria-selected", i === 0 ? "true" : "false");
-    if (i === 0) opt.classList.add("selected");
+    opt.setAttribute("aria-selected", "false");
     listbox.appendChild(opt);
     options.push(opt);
-  });
+    return opt;
+  }
 
-  function selectIndex(idx) {
-    options.forEach((o, i) => {
-      const active = i === idx;
-      o.tabIndex = active ? 0 : -1;
-      o.setAttribute("aria-selected", active ? "true" : "false");
-      o.classList.toggle("selected", active);
-    });
-    options[idx].focus();
+  opts.sounds.forEach((s) => makeOption(s, false));
+
+  function focusableIndexes() {
+    return options.map((_, i) => i);
   }
 
   function currentIndex() {
-    return options.findIndex((o) => o.tabIndex === 0);
+    let idx = options.findIndex((o) => o.tabIndex === 0);
+    return idx === -1 ? 0 : idx;
+  }
+
+  function moveFocus(idx) {
+    idx = Math.max(0, Math.min(idx, options.length - 1));
+    options.forEach((o, i) => { o.tabIndex = i === idx ? 0 : -1; });
+    options[idx].focus();
+  }
+
+  function toggleSelect(opt) {
+    const selected = opt.getAttribute("aria-selected") === "true";
+    opt.setAttribute("aria-selected", selected ? "false" : "true");
+    opt.classList.toggle("selected", !selected);
   }
 
   function playPreview(opt) {
-    if (opt.dataset.type === "none") {
-      announce("Без звука");
-      return;
-    }
-    if (!opt.dataset.src) {
-      announce("Сначала выберите файл клавишей Enter");
-      return;
-    }
+    if (!opt.dataset.src) return;
     previewAudio.src = opt.dataset.src;
     previewAudio.play().catch(() => {});
   }
 
+  function removeOption(opt) {
+    const idx = options.indexOf(opt);
+    if (idx === -1) return;
+    options.splice(idx, 1);
+    opt.remove();
+    if (options.length > 0) {
+      const newIdx = Math.min(idx, options.length - 1);
+      moveFocus(newIdx);
+    }
+  }
+
   listbox.addEventListener("keydown", (e) => {
+    if (options.length === 0) return;
     const idx = currentIndex();
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      selectIndex(Math.min(idx + 1, options.length - 1));
+      moveFocus(idx + 1);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      selectIndex(Math.max(idx - 1, 0));
+      moveFocus(idx - 1);
     } else if (e.key === "Home") {
       e.preventDefault();
-      selectIndex(0);
+      moveFocus(0);
     } else if (e.key === "End") {
       e.preventDefault();
-      selectIndex(options.length - 1);
+      moveFocus(options.length - 1);
     } else if (e.key === " " || e.key === "Spacebar") {
       e.preventDefault();
-      playPreview(options[idx]);
-    } else if (e.key === "Enter") {
-      if (options[idx].dataset.type === "custom") {
+      const opt = options[idx];
+      toggleSelect(opt);
+      playPreview(opt);
+      announce(`${opt.dataset.label}: ${opt.getAttribute("aria-selected") === "true" ? "выбран" : "снят"}`);
+    } else if (e.key === "Delete" || e.key === "Backspace") {
+      const opt = options[idx];
+      if (opt.dataset.custom === "true") {
         e.preventDefault();
-        fileInput.click();
+        const label = opt.dataset.label;
+        removeOption(opt);
+        announce(`Файл ${label} удалён из списка`);
       }
     }
   });
@@ -178,47 +207,50 @@ function createSoundPicker(opts) {
   listbox.addEventListener("click", (e) => {
     const opt = e.target.closest('[role="option"]');
     if (!opt) return;
-    selectIndex(options.indexOf(opt));
-    if (opt.dataset.type === "custom") fileInput.click();
+    moveFocus(options.indexOf(opt));
+    toggleSelect(opt);
+    playPreview(opt);
   });
 
   fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const customOpt = options[options.length - 1];
-      customOpt.dataset.src = reader.result;
-      customOpt.dataset.label = `Свой файл: ${file.name}`;
-      customOpt.textContent = customOpt.dataset.label;
-      selectIndex(options.length - 1);
-      announce(`Файл ${file.name} выбран`);
-    };
-    reader.readAsDataURL(file);
+    const files = [...fileInput.files];
+    if (files.length === 0) return;
+    let loaded = 0;
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const opt = makeOption({ type: "custom", src: reader.result, label: file.name }, true);
+        opt.setAttribute("aria-selected", "true");
+        opt.classList.add("selected");
+        loaded++;
+        if (loaded === files.length) {
+          announce(`Загружено файлов: ${files.length}`);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    fileInput.value = "";
   });
 
   return {
     el: wrapper,
     getValue() {
-      const idx = currentIndex();
-      const opt = options[Math.max(idx, 0)];
-      return {
-        type: opt.dataset.type,
-        src: opt.dataset.src || null,
-        label: opt.dataset.label,
-      };
+      return options
+        .filter((o) => o.getAttribute("aria-selected") === "true")
+        .map((o) => ({ type: o.dataset.type, src: o.dataset.src, label: o.dataset.label }));
     },
-    setValue(v) {
-      if (!v) return;
-      let idx = options.findIndex((o) => o.dataset.type === v.type && o.dataset.src === v.src);
-      if (idx === -1 && v.type === "custom" && v.src) {
-        idx = options.length - 1;
-        options[idx].dataset.src = v.src;
-        options[idx].dataset.label = v.label || "Свой файл";
-        options[idx].textContent = options[idx].dataset.label;
-      }
-      if (idx === -1) idx = 0;
-      selectIndex(idx);
+    setValue(list) {
+      if (!Array.isArray(list)) return;
+      list.forEach((v) => {
+        let opt = options.find((o) => o.dataset.src === v.src);
+        if (!opt && v.type === "custom") {
+          opt = makeOption(v, true);
+        }
+        if (opt) {
+          opt.setAttribute("aria-selected", "true");
+          opt.classList.add("selected");
+        }
+      });
     },
   };
 }
@@ -294,16 +326,12 @@ function addQueueBlock() {
   `;
 
   const endPicker = createSoundPicker({
-    legend: "Звук по окончании",
+    legend: "Звук по окончании (ничего не выбрано — короткий сигнал)",
     sounds: ALARM_SOUNDS,
-    allowNone: true,
-    noneLabel: "Без звука (короткий сигнал)",
   });
   const tickPicker = createSoundPicker({
-    legend: "Звук тиканья",
+    legend: "Звук тиканья (ничего не выбрано — тишина)",
     sounds: CLOCK_SOUNDS,
-    allowNone: true,
-    noneLabel: "Без тиканья",
   });
   block.appendChild(endPicker.el);
   block.appendChild(tickPicker.el);
@@ -386,9 +414,10 @@ function updateClock() {
   clockDisplay.textContent = `${fmt(remaining.h)}:${fmt(remaining.m)}:${fmt(remaining.s)}`;
 }
 
-function playSound(el, sound) {
-  if (sound && sound.type !== "none" && sound.src) {
-    el.src = sound.src;
+function playSound(el, soundList) {
+  const chosen = pickRandom(soundList);
+  if (chosen && chosen.src) {
+    el.src = chosen.src;
     el.play().catch(() => {});
   } else {
     el.pause();
@@ -447,7 +476,8 @@ function finishQueue() {
   clearInterval(activeInterval);
   beepTick.pause();
   const q = activeTimer.queues[queueIdx];
-  if (q.endSound && q.endSound.type !== "none" && q.endSound.src) {
+  const chosen = pickRandom(q.endSound);
+  if (chosen && chosen.src) {
     playSound(beepEnd, q.endSound);
   } else {
     beep(660, 0.4);
