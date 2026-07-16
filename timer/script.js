@@ -92,6 +92,205 @@ function resolveSrc(src) {
   return new URL(src, document.baseURI).href;
 }
 
+/* ---------- MIDI (по образцу web_midi_streamer/src/midi.js) ---------- */
+
+const midi = { access: null, input: null, output: null };
+const MIDI_INPUT_KEY = "timer_midi_input";
+const MIDI_OUTPUT_KEY = "timer_midi_output";
+let activeMidiPlaybacks = [];
+
+async function connectMidi() {
+  if (!navigator.requestMIDIAccess) {
+    announce("Web MIDI не поддерживается этим браузером");
+    return;
+  }
+  try {
+    midi.access = await navigator.requestMIDIAccess({ sysex: false });
+    midi.access.onstatechange = refreshMidiDevices;
+    document.getElementById("midiDevices").hidden = false;
+    refreshMidiDevices();
+    announce("MIDI подключён");
+  } catch {
+    announce("Не удалось получить доступ к MIDI");
+  }
+}
+
+function refreshMidiDevices() {
+  const inputSel = document.getElementById("midiInputSelect");
+  const outputSel = document.getElementById("midiOutputSelect");
+  if (!midi.access) return;
+
+  const inputs = [...midi.access.inputs.values()];
+  const outputs = [...midi.access.outputs.values()];
+  const savedInputId = localStorage.getItem(MIDI_INPUT_KEY);
+  const savedOutputId = localStorage.getItem(MIDI_OUTPUT_KEY);
+
+  inputSel.innerHTML = '<option value="">— нет —</option>';
+  inputs.forEach((i) => {
+    const o = document.createElement("option");
+    o.value = i.id; o.textContent = i.name;
+    if (i.id === savedInputId) o.selected = true;
+    inputSel.appendChild(o);
+  });
+
+  outputSel.innerHTML = '<option value="">— нет —</option>';
+  outputs.forEach((o2) => {
+    const o = document.createElement("option");
+    o.value = o2.id; o.textContent = o2.name;
+    if (o2.id === savedOutputId) o.selected = true;
+    outputSel.appendChild(o);
+  });
+
+  selectMidiInput(inputSel.value);
+  selectMidiOutput(outputSel.value);
+}
+
+function selectMidiInput(id) {
+  if (midi.input) midi.input.onmidimessage = null;
+  midi.input = id ? midi.access.inputs.get(id) : null;
+  if (midi.input) {
+    midi.input.onmidimessage = handleMidiMessage;
+    localStorage.setItem(MIDI_INPUT_KEY, id);
+  } else {
+    localStorage.removeItem(MIDI_INPUT_KEY);
+  }
+}
+
+function selectMidiOutput(id) {
+  midi.output = id ? midi.access.outputs.get(id) : null;
+  if (id) localStorage.setItem(MIDI_OUTPUT_KEY, id);
+  else localStorage.removeItem(MIDI_OUTPUT_KEY);
+}
+
+function handleMidiMessage(event) {
+  const data = event.data;
+  const status = data[0] & 0xf0;
+  if (status !== 0x90 || data[2] === 0) return; // только note-on
+  if (!runDialog.open) return;
+  switch (data[1]) {
+    case 60: togglePause(); break;                              // C4 — пауза/продолжить
+    case 62: document.getElementById("btnAnnounce").click(); break; // D4 — сказать время
+    case 64: stopAllSounds(); break;                             // E4 — тихо
+    case 65: stopTimer(); break;                                 // F4 — стоп
+    default: break;
+  }
+}
+
+/* ---------- отправка .mid файлов на MIDI-выход (парсер как в web_midi_streamer) ---------- */
+
+function dataUrlToArrayBuffer(dataUrl) {
+  const base64 = dataUrl.split(",")[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function parseSMF(buf) {
+  const u8 = new Uint8Array(buf);
+  const dv = new DataView(buf);
+  let pos = 0;
+  const read8 = () => u8[pos++];
+  const read16 = () => { const v = dv.getUint16(pos, false); pos += 2; return v; };
+  const read32 = () => { const v = dv.getUint32(pos, false); pos += 4; return v; };
+  const readVLQ = () => {
+    let val = 0;
+    for (let i = 0; i < 4; i++) {
+      const b = read8();
+      val = (val << 7) | (b & 0x7f);
+      if (!(b & 0x80)) break;
+    }
+    return val;
+  };
+  const tag = (p) => String.fromCharCode(u8[p], u8[p + 1], u8[p + 2], u8[p + 3]);
+
+  if (tag(0) !== "MThd") return [];
+  pos = 4;
+  read32();
+  read16();
+  const numTracks = read16();
+  const division = read16();
+  if (division & 0x8000) return [];
+  const tpq = division;
+
+  const rawEvents = [];
+  for (let tr = 0; tr < numTracks; tr++) {
+    if (pos + 8 > u8.length) break;
+    if (tag(pos) !== "MTrk") break;
+    pos += 4;
+    const chunkEnd = pos + read32();
+    let tick = 0, running = 0;
+    while (pos < chunkEnd) {
+      tick += readVLQ();
+      let status = u8[pos];
+      if (status === 0xff) {
+        pos++;
+        read8();
+        const len = readVLQ();
+        pos += len;
+        running = 0;
+        continue;
+      }
+      if (status === 0xf0 || status === 0xf7) {
+        pos++; pos += readVLQ();
+        running = 0;
+        continue;
+      }
+      let cmd;
+      if (status & 0x80) { cmd = running = status; pos++; } else { cmd = running; }
+      const type = cmd & 0xf0;
+      const data = (type === 0xc0 || type === 0xd0) ? [cmd, read8()] : [cmd, read8(), read8()];
+      rawEvents.push({ tick, data });
+    }
+    pos = chunkEnd;
+  }
+  if (!rawEvents.length) return [];
+  rawEvents.sort((a, b) => a.tick - b.tick);
+
+  const result = [];
+  let prevTick = 0, prevMs = 0, usPerBeat = 500000;
+  for (const ev of rawEvents) {
+    const ms = prevMs + ((ev.tick - prevTick) / tpq) * (usPerBeat / 1000);
+    prevMs = ms; prevTick = ev.tick;
+    result.push({ deltaMs: Math.round(ms), data: ev.data });
+  }
+  let prevAbs = 0;
+  return result.map((ev) => { const d = ev.deltaMs - prevAbs; prevAbs = ev.deltaMs; return { deltaMs: d, data: ev.data }; });
+}
+
+function schedulePlayback(events, sendFn) {
+  let cancelled = false;
+  (function step(idx) {
+    if (cancelled || idx >= events.length) return;
+    const ev = events[idx];
+    setTimeout(() => {
+      if (!cancelled) sendFn(ev.data);
+      step(idx + 1);
+    }, ev.deltaMs);
+  })(0);
+  return { cancel() { cancelled = true; } };
+}
+
+function playMidiFile(dataUrl) {
+  if (!midi.output) {
+    announce("MIDI-устройство для вывода не выбрано");
+    return;
+  }
+  let buf;
+  try { buf = dataUrlToArrayBuffer(dataUrl); } catch { return; }
+  const events = parseSMF(buf);
+  if (!events.length) return;
+  activeMidiPlaybacks.push(schedulePlayback(events, (data) => midi.output.send(new Uint8Array(data))));
+}
+
+function stopAllMidiPlaybacks() {
+  activeMidiPlaybacks.forEach((p) => p.cancel());
+  activeMidiPlaybacks = [];
+  if (midi.output) {
+    for (let ch = 0; ch < 16; ch++) midi.output.send(new Uint8Array([0xb0 | ch, 123, 0]));
+  }
+}
+
 /* ---------- base64 (url-safe) для ?json= ---------- */
 
 function b64encode(obj) {
@@ -233,7 +432,7 @@ function createSoundPicker(opts) {
   const addFileBtn = document.createElement("button");
   addFileBtn.type = "button";
   addFileBtn.className = "add-file-btn";
-  addFileBtn.textContent = "Добавить свой файл (можно несколько)";
+  addFileBtn.textContent = "Добавить свой файл: аудио или .mid (можно несколько)";
   wrapper.appendChild(addFileBtn);
 
   const fileInput = document.createElement("input");
@@ -287,6 +486,16 @@ function createSoundPicker(opts) {
   function togglePreview(opt) {
     if (!opt.dataset.src) {
       announce("У этого пункта нет звука");
+      return;
+    }
+    if (opt.dataset.type === "midi") {
+      if (activeMidiPlaybacks.length) {
+        stopAllMidiPlaybacks();
+        announce("MIDI остановлен");
+      } else {
+        playMidiFile(opt.dataset.src);
+        announce(`MIDI на пианино: ${opt.dataset.label}`);
+      }
       return;
     }
     const target = resolveSrc(opt.dataset.src);
@@ -358,9 +567,10 @@ function createSoundPicker(opts) {
     if (files.length === 0) return;
     let loaded = 0;
     files.forEach((file) => {
+      const isMidi = /\.(mid|midi)$/i.test(file.name);
       const reader = new FileReader();
       reader.onload = () => {
-        const opt = makeOption({ type: "custom", id: file.name, src: reader.result, label: file.name }, true);
+        const opt = makeOption({ type: isMidi ? "midi" : "custom", id: file.name, src: reader.result, label: file.name }, true);
         opt.setAttribute("aria-selected", "true");
         opt.classList.add("selected");
         loaded++;
@@ -666,22 +876,30 @@ function updateClock() {
 
 function playSound(el, soundList) {
   const chosen = pickRandom(soundList);
-  if (chosen && chosen.src) {
-    el.src = chosen.src;
-    el.play().catch(() => {});
-  } else {
+  if (!chosen || !chosen.src) {
     el.pause();
+    return;
   }
+  if (chosen.type === "midi") {
+    el.pause();
+    playMidiFile(chosen.src);
+    return;
+  }
+  el.src = chosen.src;
+  el.play().catch(() => {});
 }
 
 function playWarnSound(soundList, loop) {
   const chosen = pickRandom(soundList);
-  if (chosen && chosen.src) {
-    beepWarn.loop = loop;
-    beepWarn.src = chosen.src;
-    beepWarn.currentTime = 0;
-    beepWarn.play().catch(() => {});
+  if (!chosen || !chosen.src) return;
+  if (chosen.type === "midi") {
+    playMidiFile(chosen.src); // зацикливание для миди пока не поддержано
+    return;
   }
+  beepWarn.loop = loop;
+  beepWarn.src = chosen.src;
+  beepWarn.currentTime = 0;
+  beepWarn.play().catch(() => {});
 }
 
 function beep(freq = 880, dur = 0.2) {
@@ -701,6 +919,7 @@ function stopAllSounds() {
   beepEnd.pause();
   beepTick.pause();
   beepWarn.pause();
+  stopAllMidiPlaybacks();
   runAnnounce("Звук выключен");
 }
 
@@ -898,6 +1117,7 @@ function closeRunDialog() {
   beepTick.pause();
   beepEnd.pause();
   beepWarn.pause();
+  stopAllMidiPlaybacks();
   phase = "idle";
   runDialog.close();
 }
@@ -986,6 +1206,10 @@ function initFromUrl() {
     }
   }
 }
+
+document.getElementById("btnMidiConnect").addEventListener("click", connectMidi);
+document.getElementById("midiInputSelect").addEventListener("change", (e) => selectMidiInput(e.target.value));
+document.getElementById("midiOutputSelect").addEventListener("change", (e) => selectMidiOutput(e.target.value));
 
 renderList();
 initFromUrl();

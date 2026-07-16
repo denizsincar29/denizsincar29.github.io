@@ -22,6 +22,18 @@
   <button type="button" id="btnImportTimer">Вставить таймер из буфера (JSON)</button>
 </section>
 
+<section aria-labelledby="midi-heading">
+  <h2 id="midi-heading">MIDI</h2>
+  <button type="button" id="btnMidiConnect">Подключить MIDI</button>
+  <div id="midiDevices" hidden>
+    <label for="midiInputSelect">Устройство для управления таймером клавишами пианино</label>
+    <select id="midiInputSelect"></select>
+    <label for="midiOutputSelect">Устройство для воспроизведения .mid-звуков</label>
+    <select id="midiOutputSelect"></select>
+    <p class="picker-hint">Управление с подключённого входа: C4 — пауза/продолжить, D4 — сказать время, E4 — выключить звук, F4 — стоп</p>
+  </div>
+</section>
+
 <div class="sr-only" id="liveRegion" role="status" aria-live="polite"></div>
 
 <dialog id="createDialog" aria-labelledby="createTitle">
