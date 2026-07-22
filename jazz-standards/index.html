@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Standard List — репертуар-трекер</title>
+<meta name="description" content="Интерактивный список джазовых стандартов: сортировка, фильтры по типу, приоритету и уровню владения.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1a16;
+    --paper:#f1ead9;
+    --paper-raised:#f8f3e7;
+    --line:#d8caa8;
+    --line-strong:#b7a476;
+    --navy:#182238;
+    --navy-2:#222f4a;
+    --brass:#a5762b;
+    --brass-deep:#7e5a21;
+    --teal:#28564d;
+    --teal-deep:#1b3e37;
+    --rust:#8a3b2a;
+    --rust-deep:#6b2c1f;
+    --muted:#6b6250;
+    --focus:#0f6ab0;
+    --radius:10px;
+    --shadow: 0 2px 10px rgba(28,26,22,0.10);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+  }
+
+  a{color:var(--brass-deep);}
+
+  ::selection{background:var(--brass); color:#fff;}
+
+  /* Visually-hidden but screen-reader-accessible */
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  a.skip-link{
+    position:absolute; left:1rem; top:-3rem;
+    background:var(--navy); color:#fff; padding:.6rem 1rem;
+    border-radius:0 0 8px 8px; z-index:100; transition:top .15s ease;
+  }
+  a.skip-link:focus{top:0;}
+
+  :focus-visible{
+    outline:3px solid var(--focus);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+
+  header.hero{
+    background:
+      radial-gradient(1200px 480px at 15% -10%, rgba(165,118,43,0.20), transparent 60%),
+      linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    color:#f1ead9;
+    padding:3.2rem 1.5rem 2.6rem;
+    border-bottom:6px solid var(--brass);
+  }
+  .hero-inner{max-width:64rem; margin:0 auto;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-size:.78rem;
+    color:#cbb989;
+    margin:0 0 .9rem;
+  }
+  .eyebrow .barline{color:#7d7256; padding:0 .5em;}
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(2.1rem, 5vw, 3.4rem);
+    margin:0 0 .5rem;
+    letter-spacing:-.01em;
+  }
+  .hero p.lede{
+    max-width:42rem;
+    color:#d9cfae;
+    font-size:1.05rem;
+    margin:0;
+  }
+
+  .stats{
+    display:flex; flex-wrap:wrap; gap:1.6rem;
+    max-width:64rem; margin:2rem auto 0; padding:0 1.5rem;
+  }
+  .stat{
+    display:flex; flex-direction:column;
+    min-width:6.5rem;
+  }
+  .stat .n{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:2rem; font-weight:600;
+    color:#f1ead9;
+    line-height:1;
+  }
+  .stat .label{
+    font-size:.78rem; color:#b8ac89; margin-top:.35rem;
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+  .stat.crit .n{color:#e2a98e;}
+  .stat.mastered .n{color:#8fd0c1;}
+
+  main{max-width:64rem; margin:0 auto; padding:2.2rem 1.5rem 5rem;}
+
+  .panel{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:1.4rem 1.5rem;
+    margin-bottom:1.6rem;
+  }
+
+  .panel h2{
+    font-family:'Fraunces', serif;
+    font-size:1.05rem;
+    margin:0 0 1rem;
+    color:var(--navy);
+  }
+
+  .search-row{
+    display:flex; gap:.75rem; flex-wrap:wrap; align-items:flex-end;
+    margin-bottom:1.1rem;
+  }
+  .search-field{flex:1 1 16rem;}
+  label{
+    display:block;
+    font-size:.82rem;
+    font-weight:600;
+    color:var(--navy);
+    margin-bottom:.35rem;
+  }
+  input[type="search"], select{
+    width:100%;
+    padding:.6rem .7rem;
+    border:1px solid var(--line-strong);
+    border-radius:8px;
+    background:#fffdf7;
+    font-size:1rem;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  input[type="search"]:focus, select:focus{border-color:var(--focus);}
+
+  .toggle-btn{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.6rem .9rem;
+    border:1px solid var(--line-strong);
+    border-radius:8px;
+    background:#fffdf7;
+    font-family:inherit; font-size:.92rem; font-weight:600;
+    color:var(--navy);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .toggle-btn[aria-pressed="true"]{
+    background:var(--brass); border-color:var(--brass-deep); color:#fff;
+  }
+  .toggle-btn .star{font-size:1rem;}
+
+  fieldset{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:.85rem 1rem 1rem;
+    margin:0 0 1rem;
+  }
+  fieldset legend{
+    font-size:.82rem; font-weight:600; color:var(--navy);
+    padding:0 .4rem;
+  }
+  .check-grid{
+    display:flex; flex-wrap:wrap; gap:.5rem .9rem;
+  }
+  .check-grid label{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-weight:500; font-size:.92rem; color:var(--ink);
+    margin:0;
+    cursor:pointer;
+  }
+  .check-grid input[type="checkbox"]{
+    width:1.05rem; height:1.05rem; accent-color:var(--teal);
+  }
+
+  .filter-actions{
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:.6rem;
+  }
+  .clear-btn{
+    background:none; border:none; color:var(--brass-deep);
+    font-weight:600; font-size:.88rem; cursor:pointer;
+    padding:.3rem .2rem; text-decoration:underline;
+    font-family:inherit;
+  }
+
+  #result-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.85rem; color:var(--muted);
+  }
+
+  .table-scroll{
+    overflow-x:auto;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--paper-raised);
+    box-shadow:var(--shadow);
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:44rem;
+  }
+  thead th{
+    position:sticky; top:0;
+    background:var(--navy);
+    color:#f1ead9;
+    text-align:left;
+    padding:0;
+    font-size:.8rem;
+    z-index:2;
+  }
+  thead th button{
+    all:unset;
+    display:flex; align-items:center; gap:.4rem;
+    width:100%;
+    padding:.85rem 1rem;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    font-size:.74rem;
+  }
+  thead th button:hover{background:rgba(255,255,255,.08);}
+  thead th button .arrow{
+    font-size:.7rem; opacity:.55; min-width:.9em;
+  }
+  thead th[aria-sort="ascending"] button .arrow,
+  thead th[aria-sort="descending"] button .arrow{
+    opacity:1; color:#e2c98e;
+  }
+  thead th.col-num button{justify-content:flex-start;}
+
+  tbody tr{border-top:1px solid var(--line);}
+  tbody tr:hover{background:rgba(165,118,43,0.06);}
+  tbody td{
+    padding:.7rem 1rem;
+    vertical-align:middle;
+    font-size:.95rem;
+  }
+  td.num{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--muted);
+    font-size:.85rem;
+  }
+  td.name{font-weight:600; color:var(--ink);}
+  td.pet-cell{text-align:center;}
+  .pet-mark{color:var(--brass-deep); font-size:1.1rem;}
+
+  .badge{
+    display:inline-block;
+    padding:.22rem .6rem;
+    border-radius:99px;
+    font-size:.76rem;
+    font-weight:700;
+    letter-spacing:.02em;
+    border:1px solid transparent;
+    white-space:nowrap;
+  }
+  .badge-type{
+    background:#e7ddc2; color:var(--navy); border-color:var(--line-strong);
+  }
+  .badge-prio-1{background:#f3ded6; color:var(--rust-deep); border-color:#d9a48f;}
+  .badge-prio-2{background:#f4e7cf; color:var(--brass-deep); border-color:#e0c48c;}
+  .badge-prio-3{background:#e9e4d3; color:#7a7150; border-color:#cfc6a2;}
+  .badge-prio-4{background:#e8e4dc; color:#8a8478; border-color:#d3ccbe;}
+
+  .badge-mastery-A{background:#dbeee7; color:var(--teal-deep); border-color:#a9d3c3;}
+  .badge-mastery-B{background:#e6efe1; color:#3c5c33; border-color:#bcd6ac;}
+  .badge-mastery-C{background:#f2ecd6; color:#7a6a2c; border-color:#ddcf99;}
+  .badge-mastery-D{background:#f1e7e2; color:#8a5a45; border-color:#dcc0ae;}
+
+  .empty-state{
+    padding:3rem 1.5rem;
+    text-align:center;
+    color:var(--muted);
+  }
+  .empty-state strong{display:block; color:var(--navy); font-size:1.05rem; margin-bottom:.4rem;}
+
+  footer{
+    max-width:64rem; margin:0 auto; padding:0 1.5rem 3rem;
+    color:var(--muted); font-size:.85rem;
+  }
+
+  @media (max-width: 640px){
+    .stats{gap:1rem;}
+    .stat{min-width:5.2rem;}
+    .search-row{flex-direction:column; align-items:stretch;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none !important; animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к списку тем</a>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Личный репертуар <span class="barline">|</span> 300 тем <span class="barline">|</span> джем по средам</p>
+    <h1>The Standard List</h1>
+    <p class="lede">Трекер джазовых стандартов: что выучено, что в работе и что ждёт своей очереди. Сортируй по любой колонке, фильтруй по типу, приоритету и уровню владения.</p>
+  </div>
+  <div class="stats" id="stats-row" aria-hidden="true"><!-- filled by JS --></div>
+</header>
+
+<main id="main">
+
+  <section class="panel" aria-labelledby="controls-heading">
+    <h2 id="controls-heading">Поиск и фильтры</h2>
+
+    <div class="search-row">
+      <div class="search-field">
+        <label for="search-input">Поиск по названию</label>
+        <input type="search" id="search-input" placeholder="Например, Autumn Leaves…" autocomplete="off">
+      </div>
+      <button type="button" class="toggle-btn" id="pet-toggle" aria-pressed="false">
+        <span class="star" aria-hidden="true">★</span> Только pet-проекты
+      </button>
+    </div>
+
+    <fieldset>
+      <legend>Тип</legend>
+      <div class="check-grid" id="type-filters"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Приоритет</legend>
+      <div class="check-grid" id="priority-filters"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Уровень владения</legend>
+      <div class="check-grid" id="mastery-filters"></div>
+    </fieldset>
+
+    <div class="filter-actions">
+      <button type="button" class="clear-btn" id="clear-filters">Сбросить всё</button>
+      <span id="result-count" role="status" aria-live="polite">Показано 300 из 300 тем</span>
+    </div>
+  </section>
+
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица тем">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num" data-key="n" aria-sort="ascending">
+            <button type="button">№ <span class="arrow" aria-hidden="true">▲</span></button>
+          </th>
+          <th data-key="name">
+            <button type="button">Название <span class="arrow" aria-hidden="true">▲</span></button>
+          </th>
+          <th data-key="type">
+            <button type="button">Тип <span class="arrow" aria-hidden="true">▲</span></button>
+          </th>
+          <th data-key="priority">
+            <button type="button">Приоритет <span class="arrow" aria-hidden="true">▲</span></button>
+          </th>
+          <th data-key="mastery">
+            <button type="button">Владение <span class="arrow" aria-hidden="true">▲</span></button>
+          </th>
+          <th data-key="pet">
+            <button type="button">Pet <span class="arrow" aria-hidden="true">▲</span></button>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tunes-body"></tbody>
+    </table>
+    <div class="empty-state" id="empty-state" hidden>
+      <strong>Ничего не найдено</strong>
+      Попробуй изменить поиск или сбросить фильтры.
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Данные тянутся из личного трекера тем. Список хранится локально в браузере (фильтры запоминаются), никуда не отправляется.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  const TUNES = [{"n":1,"name":"All The Things You Are","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":2,"name":"Anthropology","type":"Rhythm Changes","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":3,"name":"Autumn Leaves","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":4,"name":"Billie’s Bounce","type":"Blues","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":5,"name":"Blue Bossa","type":"Latin","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":6,"name":"Body and Soul","type":"Ballad","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":7,"name":"Cherokee","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":8,"name":"Donna Lee","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":9,"name":"Four","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":10,"name":"Giant Steps","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":11,"name":"Green Dolphin Street","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":12,"name":"Groovin' High","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":13,"name":"Have You Met Miss Jones","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":14,"name":"How High the Moon","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":15,"name":"I Hear A Rhapsody","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":16,"name":"I Love You","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":17,"name":"I’ll Remember April","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":18,"name":"Impressions","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":19,"name":"Invitation","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":20,"name":"It Could Happen To You","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":21,"name":"Just Friends","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":22,"name":"Lady Bird","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":23,"name":"Mr PC","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":24,"name":"Now’s the Time","type":"Blues","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":25,"name":"Oleo","type":"Rhythm Changes","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":26,"name":"Out of Nowhere","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":27,"name":"Softly as in a Morning Sunrise","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":28,"name":"Solar","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":29,"name":"Stablemates","type":"Jazz Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":30,"name":"Stella by Starlight","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":31,"name":"Straight No Chaser","type":"Blues","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":32,"name":"Summertime","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":33,"name":"Tenor Madness","type":"Blues","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":34,"name":"There is No Greater Love","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":35,"name":"There Will Never Be Another You","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":36,"name":"What is this Thing Called Love","type":"Standard","priority":1,"priorityLabel":"Critical","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":37,"name":"Airegin","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":38,"name":"All of Me","type":"Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":39,"name":"Alone Together","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":40,"name":"Along Came Betty","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":true},{"n":41,"name":"Ask Me Now","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":42,"name":"Au Privave","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":43,"name":"Beatrice","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":true},{"n":44,"name":"Blues for Alice","type":"Blues","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":45,"name":"Bolivia","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":46,"name":"Bye Bye Blackbird","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":47,"name":"C Jam Clues","type":"Blues","priority":2,"priorityLabel":"High","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":48,"name":"Caravan","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":49,"name":"Confirmation","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":50,"name":"Days of Wine and Roses","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":51,"name":"Dolphin Dance","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":52,"name":"Don't Get Around Much Anymore","type":"Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":53,"name":"East of the Sun","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":54,"name":"In a Sentimental Mood","type":"Ballad","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":55,"name":"In Your Own Sweet Way","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":56,"name":"Inner Urge","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":57,"name":"Isfahan","type":"Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":58,"name":"Joy Spring","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":59,"name":"Lazy Bird","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":60,"name":"Like Someone in Love","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":61,"name":"Milestones (new)","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":62,"name":"Minority","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":63,"name":"Moment’s Notice","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":64,"name":"Moonlight in Vermont","type":"Ballad","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":65,"name":"My One and Only Love","type":"Ballad","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":66,"name":"Nardis","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":67,"name":"Nica’s Dream","type":"Latin","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":68,"name":"Night and Day","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":69,"name":"One Finger Snap","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":70,"name":"Pent-up House","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":71,"name":"Recordame","type":"Latin","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":72,"name":"Rhythm-a-Ning","type":"Rhythm Changes","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":73,"name":"Round Midnight","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":74,"name":"Scrapple from the Apple","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":75,"name":"Serenity","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":76,"name":"Seven Steps to Heaven","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":77,"name":"Soul Eyes","type":"Ballad","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":78,"name":"Star Eyes","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":79,"name":"Take the “A” Train","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":80,"name":"The Song is You","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":81,"name":"The Theme","type":"Rhythm Changes","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":82,"name":"This I Dig of You","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":83,"name":"Tune-Up","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":84,"name":"UMMG","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":85,"name":"Without a Song","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":86,"name":"Yardbird Suite","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":87,"name":"Yes or No","type":"Jazz Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":88,"name":"You Stepped Out of a Dream","type":"Standard","priority":2,"priorityLabel":"High","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":89,"name":"26-2","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":90,"name":"A Night in Tunesia","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":91,"name":"All Blues","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":92,"name":"All of You","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":93,"name":"Angel Eyes","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":94,"name":"Autumn in New York","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":95,"name":"Beautiful Love","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":96,"name":"Bemsha Swing","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":97,"name":"Black Narcissus","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":98,"name":"Black Nile","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":99,"name":"Black Orpheus","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":100,"name":"Blue Monk","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":101,"name":"But Beautiful","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":102,"name":"But Not for Me","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":103,"name":"Ceora","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":104,"name":"Cheryl","type":"Blues","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":105,"name":"Come Rain or Come Shine","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":106,"name":"Con Alma","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":107,"name":"Corcovado (Quiet Nights)","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":108,"name":"Countdown","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":109,"name":"Criss Cross","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":110,"name":"Daahound","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":111,"name":"Desafinado","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":112,"name":"Doxy","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":113,"name":"Easy to Love","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":114,"name":"Embraceable You","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":115,"name":"Epistrophy","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":116,"name":"Equinox","type":"Blues","priority":3,"priorityLabel":"Medium","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":117,"name":"ESP","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":118,"name":"Everything Happens to Me","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":119,"name":"Evidence","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":120,"name":"Falling Grace","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":121,"name":"Fee-Fi-Fo-Fum","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":122,"name":"Footprints","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":123,"name":"For All We Know","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":124,"name":"Four In One","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":125,"name":"Freddie Freeloader","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":126,"name":"Freedom Jazz Dance","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":127,"name":"Good Bait","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":128,"name":"Goodbye Pork Pie","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":129,"name":"Green Chimneys","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":130,"name":"Half Nelson","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":131,"name":"Hot House","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":132,"name":"How Deep is the Ocean","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":133,"name":"I Can’t Get Started","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":134,"name":"I Could Write a Book","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":135,"name":"I Got Rhythm","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":136,"name":"I Mean You","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":137,"name":"I Remember Clifford","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":138,"name":"I Remember You","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":139,"name":"I Should Care","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":140,"name":"I Thought about You","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":141,"name":"If I Were a Bell","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":142,"name":"In Walked Bud","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":143,"name":"Indiana","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":144,"name":"Infant Eyes","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":145,"name":"Isotope","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":146,"name":"It I Should Lose You","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":147,"name":"It’s You or No One","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":148,"name":"Jordu","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":149,"name":"Just in Time","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":150,"name":"Just One of those Things","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":151,"name":"Killer Joe","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":152,"name":"Laura","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":153,"name":"Let's Cool One","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":154,"name":"Little Sunflower","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":155,"name":"Love for Sale","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":156,"name":"Lullaby of Birdland","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":157,"name":"Lush Life","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":158,"name":"Maiden Voyage","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":159,"name":"Milestones (Miles)","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":160,"name":"Misty","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":161,"name":"Monk's Dream","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":162,"name":"Monk's Mood","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":163,"name":"My Foolish Heart","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":164,"name":"My Funny Valentine","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":165,"name":"My Shining Hour","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":true},{"n":166,"name":"My Ship","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":167,"name":"Nefertiti","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":168,"name":"Night Dreamer","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":169,"name":"Old Folks","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":170,"name":"One Note Samba","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":171,"name":"Ornithology","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":172,"name":"Peace","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":173,"name":"Pensativa","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":174,"name":"Perdido","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":175,"name":"Polka dots and Moonbeams","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":176,"name":"Prelude to a Kiss","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":177,"name":"Ruby My Dear","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":178,"name":"Salt Peanuts","type":"Rhythm Changes","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":179,"name":"Sandu","type":"Blues","priority":3,"priorityLabel":"Medium","mastery":"A","masteryLabel":"Mastered","pet":false},{"n":180,"name":"Satin Doll","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":181,"name":"Secret Love","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":182,"name":"Skylark","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":183,"name":"So What","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":184,"name":"Someday my Prince will Come","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":185,"name":"Song For My Father","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":186,"name":"Sonnymoon for Two","type":"Blues","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":187,"name":"Speak Low","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":188,"name":"Speak No Evil","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":189,"name":"St. Thomas","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":190,"name":"Steeplechase","type":"Rhythm Changes","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":191,"name":"Stompin’ at the Savoy","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":192,"name":"Sweet Georgia Brown","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":193,"name":"Tenderly","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":194,"name":"The Girl From Ipanema","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":195,"name":"The Jitterbug Waltz","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":196,"name":"The Night Has 1000 Eyes","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":197,"name":"The Shadow of your Smile","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":198,"name":"The Way you Look Tonight","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":199,"name":"These Foolish Things","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":200,"name":"Think of One","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":201,"name":"Up Jumped Spring","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":202,"name":"Walkin’","type":"Blues","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":203,"name":"Watermelon Man","type":"Funk","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":204,"name":"Wave","type":"Latin","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":205,"name":"Well, you Needn’t","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":206,"name":"What’s New?","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":true},{"n":207,"name":"Whisper Not","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":208,"name":"Wild Flower","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":209,"name":"Windows","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":210,"name":"Witch Hunt","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":211,"name":"Witchcraft","type":"Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":212,"name":"Woody ‘n You","type":"Jazz Standard","priority":3,"priorityLabel":"Medium","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":213,"name":"Yesterdays","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":214,"name":"You Don’t Know What Love Is","type":"Ballad","priority":3,"priorityLabel":"Medium","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":215,"name":"A Child is Born","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":216,"name":"A Day in the Life of a Fool","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":217,"name":"Afternoon in Paris","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":218,"name":"Ah-Leu-Cha","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":219,"name":"Alice in Wonderland","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":220,"name":"All God’s Chillun","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":221,"name":"April in Paris","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":222,"name":"Bag’s Groove","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":223,"name":"Bernie's Tune","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":224,"name":"Bessie’s Blues","type":"Blues","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":225,"name":"Blue in Green","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":226,"name":"Bluesette","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":227,"name":"Chelsea Bridge","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":228,"name":"Conception","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":229,"name":"Cousin Mary","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":230,"name":"CTA","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":231,"name":"Dearly Beloved","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":232,"name":"Dig","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":233,"name":"Don't Blame Me","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":234,"name":"Easy Living","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":235,"name":"El Gaucho","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":236,"name":"Emily","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":237,"name":"End of a Love Affair","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":238,"name":"Georgia On My Mind","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":239,"name":"Gone with the Wind","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":240,"name":"Hackensack","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":241,"name":"Here’s That Rainy Day","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":242,"name":"Hi-Fly","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":243,"name":"How Insensitive","type":"Latin","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":244,"name":"I Didn’t Know What Time it Was","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":245,"name":"I Fall in Love too Easily","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":246,"name":"I Got it Bad and that ain’t Good","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":247,"name":"I Want to Talk about You","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":248,"name":"I’ll Take Romance","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":249,"name":"I’m Old Fashioned","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":250,"name":"I’ve Grown Accustomed to Her Face","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":251,"name":"If You Could See Me Now","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":252,"name":"In A Mellowtone","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":253,"name":"Israel","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":254,"name":"It Don’t Mean a Thing","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":255,"name":"It Might As Well Be Spring","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":256,"name":"It’s All Right with Me","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":257,"name":"Joshua","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":258,"name":"Juju","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":259,"name":"Lament","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":260,"name":"Lester Leaps In","type":"Rhythm Changes","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":261,"name":"Litha","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":262,"name":"Long Ago and Far Away","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":263,"name":"Love Walked In","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":264,"name":"Lover","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":265,"name":"Lover Come Back to Me","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":266,"name":"Loverman","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":267,"name":"Mack the Knife","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":268,"name":"Mahjong","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":269,"name":"Manteca","type":"Latin","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":270,"name":"Meditation","type":"Latin","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":271,"name":"Misterioso","type":"Blues","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":272,"name":"Monk’s Mood","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":273,"name":"Mr Clean","type":"Funk","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":274,"name":"My Romance","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":275,"name":"Naima","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":276,"name":"On the Sunny Side of the Street","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":277,"name":"Once I Loved","type":"Latin","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":278,"name":"Our Delight","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":279,"name":"Our Love is Here to Stay","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":280,"name":"Over the Rainbow","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":281,"name":"Passion Dance","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"B","masteryLabel":"Proficient","pet":false},{"n":282,"name":"Satellite","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":true},{"n":283,"name":"Smoke Gets in your Eyes","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":284,"name":"Some Other Blues","type":"Blues","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":285,"name":"Someone to Watch Over Me","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":286,"name":"Sophisticated Lady","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":287,"name":"Spring Can Really Hang You Up","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":288,"name":"Spring is Here","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":289,"name":"Stardust","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":290,"name":"Sugar","type":"Blues","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":291,"name":"Tangerine","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":292,"name":"The Duke","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":293,"name":"Things ain’t what they used to Be","type":"Blues","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":294,"name":"Triste","type":"Latin","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":295,"name":"Unit Seven","type":"Blues","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":296,"name":"Valse Hot","type":"Jazz Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":297,"name":"When I Fall in Love","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"C","masteryLabel":"Familiar","pet":false},{"n":298,"name":"When Lights are Low","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":299,"name":"When Sunny Gets Blue","type":"Ballad","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false},{"n":300,"name":"You’re a Weaver of Dreams","type":"Standard","priority":4,"priorityLabel":"Low","mastery":"D","masteryLabel":"Don't know","pet":false}]
+;
+
+  const PRIORITY_ORDER = {1:1, 2:2, 3:3, 4:4};
+  const MASTERY_ORDER = {A:0, B:1, C:2, D:3};
+
+  const state = {
+    search: "",
+    types: new Set(),
+    priorities: new Set(),
+    masteries: new Set(),
+    petOnly: false,
+    sortKey: "n",
+    sortDir: "asc"
+  };
+
+  const STORAGE_KEY = "standard-list-filters-v1";
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const saved = JSON.parse(raw);
+      state.search = saved.search || "";
+      state.types = new Set(saved.types || []);
+      state.priorities = new Set(saved.priorities || []);
+      state.masteries = new Set(saved.masteries || []);
+      state.petOnly = !!saved.petOnly;
+      state.sortKey = saved.sortKey || "n";
+      state.sortDir = saved.sortDir || "asc";
+    }catch(e){ /* ignore corrupt storage */ }
+  }
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        search: state.search,
+        types: [...state.types],
+        priorities: [...state.priorities],
+        masteries: [...state.masteries],
+        petOnly: state.petOnly,
+        sortKey: state.sortKey,
+        sortDir: state.sortDir
+      }));
+    }catch(e){ /* ignore */ }
+  }
+
+  const uniqueTypes = [...new Set(TUNES.map(t => t.type))].sort();
+  const priorityDefs = [
+    {val:1, label:"Critical"},
+    {val:2, label:"High"},
+    {val:3, label:"Medium"},
+    {val:4, label:"Low"}
+  ];
+  const masteryDefs = [
+    {val:"A", label:"Mastered"},
+    {val:"B", label:"Proficient"},
+    {val:"C", label:"Familiar"},
+    {val:"D", label:"Don't know"}
+  ];
+
+  function buildCheckGroup(container, items, valueKey, labelKey, stateSet, prefix, numeric){
+    container.innerHTML = "";
+    items.forEach(item => {
+      const val = item[valueKey] !== undefined ? item[valueKey] : item;
+      const lab = item[labelKey] !== undefined ? item[labelKey] : item;
+      const id = prefix + "-" + String(val).replace(/\s+/g,"_");
+      const wrap = document.createElement("label");
+      wrap.setAttribute("for", id);
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = id;
+      cb.value = val;
+      cb.checked = stateSet.has(val);
+      cb.addEventListener("change", () => {
+        const v = numeric ? Number(cb.value) : cb.value;
+        if(cb.checked) stateSet.add(v); else stateSet.delete(v);
+        render();
+        saveState();
+      });
+      wrap.appendChild(cb);
+      wrap.appendChild(document.createTextNode(lab));
+      container.appendChild(wrap);
+    });
+  }
+
+  function passesFilters(t){
+    if(state.search){
+      const q = state.search.trim().toLowerCase();
+      if(q && !t.name.toLowerCase().includes(q)) return false;
+    }
+    if(state.types.size && !state.types.has(t.type)) return false;
+    if(state.priorities.size && !state.priorities.has(t.priority)) return false;
+    if(state.masteries.size && !state.masteries.has(t.mastery)) return false;
+    if(state.petOnly && !t.pet) return false;
+    return true;
+  }
+
+  function sortTunes(list){
+    const key = state.sortKey;
+    const dir = state.sortDir === "asc" ? 1 : -1;
+    return list.slice().sort((a,b) => {
+      let av, bv;
+      if(key === "priority"){ av = PRIORITY_ORDER[a.priority]; bv = PRIORITY_ORDER[b.priority]; }
+      else if(key === "mastery"){ av = MASTERY_ORDER[a.mastery]; bv = MASTERY_ORDER[b.mastery]; }
+      else if(key === "pet"){ av = a.pet ? 1 : 0; bv = b.pet ? 1 : 0; }
+      else if(key === "n"){ av = a.n; bv = b.n; }
+      else { av = String(a[key]).toLowerCase(); bv = String(b[key]).toLowerCase(); }
+      if(av < bv) return -1 * dir;
+      if(av > bv) return 1 * dir;
+      return (a.n - b.n);
+    });
+  }
+
+  const tbody = document.getElementById("tunes-body");
+  const emptyState = document.getElementById("empty-state");
+  const resultCount = document.getElementById("result-count");
+
+  function renderStats(){
+    const total = TUNES.length;
+    const critical = TUNES.filter(t => t.priority === 1).length;
+    const mastered = TUNES.filter(t => t.mastery === "A").length;
+    const pet = TUNES.filter(t => t.pet).length;
+    const statsRow = document.getElementById("stats-row");
+    statsRow.innerHTML = `
+      <div class="stat"><span class="n">${total}</span><span class="label">Тем всего</span></div>
+      <div class="stat crit"><span class="n">${critical}</span><span class="label">Критичный приоритет</span></div>
+      <div class="stat mastered"><span class="n">${mastered}</span><span class="label">Освоено</span></div>
+      <div class="stat"><span class="n">${pet}</span><span class="label">Pet-проекты</span></div>
+    `;
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  function render(){
+    const filtered = TUNES.filter(passesFilters);
+    const sorted = sortTunes(filtered);
+
+    if(sorted.length === 0){
+      tbody.innerHTML = "";
+      emptyState.hidden = false;
+    } else {
+      emptyState.hidden = true;
+      tbody.innerHTML = sorted.map(t => `
+        <tr>
+          <td class="num">${t.n}</td>
+          <td class="name">${escapeHtml(t.name)}</td>
+          <td><span class="badge badge-type">${escapeHtml(t.type)}</span></td>
+          <td><span class="badge badge-prio-${t.priority}">${t.priorityLabel}</span></td>
+          <td><span class="badge badge-mastery-${t.mastery}">${t.masteryLabel}</span></td>
+          <td class="pet-cell">${t.pet ? '<span class="pet-mark" title="Pet-проект" aria-label="Pet-проект: да">★</span>' : '<span class="sr-only">Pet-проект: нет</span>'}</td>
+        </tr>
+      `).join("");
+    }
+
+    resultCount.textContent = `Показано ${sorted.length} из ${TUNES.length} тем`;
+
+    document.querySelectorAll("thead th").forEach(th => {
+      const key = th.dataset.key;
+      if(key === state.sortKey){
+        th.setAttribute("aria-sort", state.sortDir === "asc" ? "ascending" : "descending");
+        th.querySelector(".arrow").textContent = state.sortDir === "asc" ? "▲" : "▼";
+      } else {
+        th.setAttribute("aria-sort", "none");
+        th.querySelector(".arrow").textContent = "▲";
+      }
+    });
+  }
+
+  // Search
+  const searchInput = document.getElementById("search-input");
+  searchInput.addEventListener("input", () => {
+    state.search = searchInput.value;
+    render();
+    saveState();
+  });
+
+  // Pet toggle
+  const petToggle = document.getElementById("pet-toggle");
+  petToggle.addEventListener("click", () => {
+    state.petOnly = !state.petOnly;
+    petToggle.setAttribute("aria-pressed", String(state.petOnly));
+    render();
+    saveState();
+  });
+
+  // Filter groups
+  buildCheckGroup(document.getElementById("type-filters"), uniqueTypes.map(t => ({val:t,label:t})), "val", "label", state.types, "type");
+  buildCheckGroup(document.getElementById("priority-filters"), priorityDefs, "val", "label", state.priorities, "prio", true);
+  buildCheckGroup(document.getElementById("mastery-filters"), masteryDefs, "val", "label", state.masteries, "mastery");
+
+  // Sorting via header buttons
+  document.querySelectorAll("thead th button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const th = btn.closest("th");
+      const key = th.dataset.key;
+      if(state.sortKey === key){
+        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+      } else {
+        state.sortKey = key;
+        state.sortDir = "asc";
+      }
+      render();
+      saveState();
+    });
+  });
+
+  // Clear filters
+  document.getElementById("clear-filters").addEventListener("click", () => {
+    state.search = "";
+    state.types.clear();
+    state.priorities.clear();
+    state.masteries.clear();
+    state.petOnly = false;
+    searchInput.value = "";
+    petToggle.setAttribute("aria-pressed", "false");
+    document.querySelectorAll("#type-filters input, #priority-filters input, #mastery-filters input").forEach(cb => cb.checked = false);
+    render();
+    saveState();
+  });
+
+  loadState();
+  // reflect loaded state into controls
+  searchInput.value = state.search;
+  petToggle.setAttribute("aria-pressed", String(state.petOnly));
+  document.querySelectorAll("#type-filters input").forEach(cb => cb.checked = state.types.has(cb.value));
+  document.querySelectorAll("#priority-filters input").forEach(cb => cb.checked = state.priorities.has(Number(cb.value)));
+  document.querySelectorAll("#mastery-filters input").forEach(cb => cb.checked = state.masteries.has(cb.value));
+
+  renderStats();
+  render();
+})();
+</script>
+</body>
+</html>
